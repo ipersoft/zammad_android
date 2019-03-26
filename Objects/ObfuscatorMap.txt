@@ -1,3 +1,0 @@
-Questo file associa le variabili rinominate dall'originale.
-v5=starter
-v6=main
