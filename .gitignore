@@ -6,3 +6,4 @@ AutoBackups/
 *.apk
 *.dex
 *b4a.meta
+ObfuscatorMap.txt
