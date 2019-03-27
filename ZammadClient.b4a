@@ -92,6 +92,7 @@ Sub LoginZammad
 	j.Download(ServerLink & "/api/v1/users/me")
 	j.Username=UserNameLink
 	j.Password=UserPasswordLink
+	j.GetRequest.SetHeader("User-Agent","ZammadAndroid")
 	Wait For (j) JobDone(j As HttpJob)
 	If j.Success=False Then
 		Msgbox("Error","")
