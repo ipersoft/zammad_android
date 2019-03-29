@@ -10,13 +10,14 @@ Sub Class_Globals
 	Public login As String
 	Public firstname As String
 	Public lastname As String
+	Public organization_id As Int
 End Sub
 
 'Initializes the object. You can add parameters to this method if needed.
 Public Sub Initialize
 	
 End Sub
-Sub LoadJson(sJson) As Boolean
+Sub LoadJson(sJson As String) As Boolean
 	Try
 		Dim jP As JSONParser
 		jP.Initialize(sJson)
@@ -27,6 +28,7 @@ Sub LoadJson(sJson) As Boolean
 		login=mUser.Get("login")
 		firstname=mUser.Get("firstname")
 		lastname=mUser.Get("lastname")
+		organization_id=mUser.Get("organization_id")
 		Return True
 	Catch
 		Return False

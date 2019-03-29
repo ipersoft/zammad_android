@@ -13,9 +13,17 @@ End Sub
 Public Sub Initialize
 	
 End Sub
-public Sub GetUser(j As HttpJob) As HttpJob
-	j.Download(c.URL & "/api/v1/users/me")
+private Sub BasicConfig(j As HttpJob) As HttpJob
 	j.Username=c.Username
 	j.Password=c.Password
 	j.GetRequest.SetHeader("User-Agent",m.UserAgent)
+	Return j
+End Sub
+public Sub GetUser(j As HttpJob)	As HttpJob
+	j.Download(c.URL & "/api/v1/users/me")
+	Return BasicConfig(j)
+End Sub
+public Sub GetOrgs(j As HttpJob)	As HttpJob
+	j.Download(c.URL & "/api/v1/organizations/")
+	Return BasicConfig(j)
 End Sub
