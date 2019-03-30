@@ -11,6 +11,9 @@ Sub Class_Globals
 	Public firstname As String
 	Public lastname As String
 	Public organization_id As Int
+	Public isAdmin As Boolean
+	Public isAgent As Boolean
+	Public isCustomer As Boolean
 End Sub
 
 'Initializes the object. You can add parameters to this method if needed.
@@ -29,6 +32,19 @@ Sub LoadJson(sJson As String) As Boolean
 		firstname=mUser.Get("firstname")
 		lastname=mUser.Get("lastname")
 		organization_id=mUser.Get("organization_id")
+		Dim Perms As List
+		Perms=mUser.Get("role_ids")
+		Dim n As Int
+		For n=0 To Perms.Size-1
+			Select Case Perms.Get(n)
+				Case 1
+					isAdmin=True
+				Case 2
+					isAgent=True
+				Case 3
+					isCustomer=True
+			End Select
+		Next
 		Return True
 	Catch
 		Return False

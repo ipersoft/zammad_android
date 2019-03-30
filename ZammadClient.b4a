@@ -1,9 +1,14 @@
 ﻿Build1=Default,it.ipersoft.zammad
-File1=LayoutLogin.bal
+File1=header.jpg
+File2=layhome.bal
+File3=LayoutLogin.bal
 FileGroup1=Default Group
+FileGroup2=Default Group
+FileGroup3=Default Group
 Group=Default Group
 IconFile=
 Library1=core
+Library10=msmaterialdrawer
 Library2=sql
 Library3=b4xencryption
 Library4=randomaccessfile
@@ -21,9 +26,10 @@ Module5=cLink
 Module6=cMy
 Module7=cOrg
 Module8=cOrgs
-NumberOfFiles=1
-NumberOfLibraries=9
-NumberOfModules=8
+Module9=cLanguage
+NumberOfFiles=3
+NumberOfLibraries=10
+NumberOfModules=9
 Version=9
 @EndOfDesignText@
 #Region  Project Attributes 
@@ -34,6 +40,8 @@ Version=9
 	#SupportedOrientations: unspecified
 	#CanInstallToExternalStorage: False
 	#Extends: android.support.v7.app.AppCompatActivity
+	#AdditionalRes: ..\addres\md-app\res
+	#AdditionalRes: ..\addres\md-lib\res
 #End Region
 
 #Region  Activity Attributes 
@@ -49,6 +57,7 @@ Sub Process_Globals
 	Public gLink As cLink
 	Public gMy As cMy
 	Public gOrgs As cOrgs
+	Public gL As cLanguage
 End Sub
 
 Sub Globals
@@ -60,11 +69,21 @@ Sub Globals
 	Private ServerText As ACEditText
 	Private UsernameText As ACEditText
 	Private kIME As IME
+	
+	Private ActionBar As ACToolBarLight
+	Private pContent As Panel
+	Private ABHelper As ACActionBar
+	Private MDB As MSMaterialDrawerBuilder
+	Private MD As MSMaterialDrawer
+
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
 	'Do not forget to load the layout file created with the visual designer. For example:
 	gMy.Initialize
+	gL.Initialize
+	gL.LANGUAGE="ITA"
+	
 	kC=Starter.kConfig
 	Activity.LoadLayout("LayoutLogin")
 	LoadLoginValues
@@ -93,23 +112,22 @@ Sub OKButton_Click
 	gLink.c=gConnection
 	gLink.m=gMy
 	
-	ProgressDialogShow("Connessione in corso ...")
+	ProgressDialogShow(gL.ConnectionInProgress)
 	Wait For (Login) Complete (Success As Boolean)	
 	ProgressDialogHide
-	If Success=True Then
-		Msgbox (gUser.firstname & " " & gUser.lastname,gUser.login)
-		Else
+	If Success=False Then
 		Msgbox("Error","")
 	End If
 	If Success=True Then
-		ProgressDialogShow("Caricamento aziende ...")
+		ProgressDialogShow(gL.LoadingOrganizations)
 		Wait For (LoadOrgs) Complete (Success As Boolean)
 		ProgressDialogHide
-		If Success=True Then
-				Msgbox(gOrgs.org(gUser.organization_id).name,"OK")
-			Else
-				Msgbox(LastException,"")
+		If Success=False Then
+			Msgbox(LastException,"")
 		End If
+	End If
+	If Success=True Then
+		GenMenu
 	End If
 End Sub
 Sub LoadLoginValues
@@ -120,7 +138,43 @@ Sub SaveLoginValues
 	kC.Put("LOGIN",UsernameText.Text)
 	kC.Put("SERVER",ServerText.Text)
 End Sub
-
+Sub GenMenu
+	Activity.RemoveAllViews
+	Activity.LoadLayout("layhome")
+	ActionBar.Title="Zammad Android"
+	
+	Dim MSP As MSProfile
+	'    Dim PDB1 As BitmapDrawable : PDB1.Initialize(LoadBitmap(File.DirAssets,"profile2.jpg"))
+	MSP.withName(gUser.firstname & " " & gUser.lastname).withEmail(gUser.login)
+		Dim msa As MSAccountHeaderBuilder
+	msa.Initialize("MSA")
+	Dim Profiles(1) As MSProfile
+	Profiles(0) = MSP
+	msa.addProfiles(Profiles)
+	
+	Dim HeaderBackground As BitmapDrawable
+	HeaderBackground.Initialize(LoadBitmap(File.DirAssets,"header.jpg"))	
+	msa.withHeaderBackground(HeaderBackground)
+	msa.withProfileImagesVisible(False)
+	msa.withSelectionListEnabled(False)
+	
+	MDB.Initialize("MD")
+	MDB.withAccountHeader(msa.build)
+	MDB.withToolbar(ActionBar)
+	MDB.withActionbarToggle(True)
+	MDB.withActionbarToggleAnimated(True)
+	MDB.withDisplayBelowToolbar(False)
+	
+	If gUser.isAdmin Or gUser.isAgent Or gUser.isCustomer  Then
+		MDB.AddPrimaryDrawerItem("Notifiche",Null,Null,"",True,10,"")
+	End If
+	If gUser.isAdmin Or gUser.isAgent Then
+		MDB.AddPrimaryDrawerItem("Azienda",Null,Null,"",True,20,"")
+	End If
+	
+	
+	MD = MDB.Build
+End Sub
 Sub Login As ResumableSub
 	Dim j As HttpJob
 	Dim sJson As String
