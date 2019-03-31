@@ -1,14 +1,19 @@
 ﻿Build1=Default,it.ipersoft.zammad
 File1=header.jpg
-File2=layhome.bal
-File3=LayoutLogin.bal
+File2=layclv.bal
+File3=layhome.bal
+File4=LayoutLogin.bal
+File5=layweb.bal
 FileGroup1=Default Group
 FileGroup2=Default Group
 FileGroup3=Default Group
+FileGroup4=Default Group
+FileGroup5=Default Group
 Group=Default Group
 IconFile=
 Library1=core
 Library10=msmaterialdrawer
+Library11=xcustomlistview
 Library2=sql
 Library3=b4xencryption
 Library4=randomaccessfile
@@ -21,15 +26,14 @@ ManifestCode='This code will be applied to the manifest file during compilation.
 Module1=Starter
 Module2=KeyValueStore
 Module3=cUser
-Module4=cConnection
-Module5=cLink
-Module6=cMy
-Module7=cOrg
-Module8=cOrgs
-Module9=cLanguage
-NumberOfFiles=3
-NumberOfLibraries=10
-NumberOfModules=9
+Module4=cLink
+Module5=cMy
+Module6=cOrgs
+Module7=cLanguage
+Module8=types
+NumberOfFiles=5
+NumberOfLibraries=11
+NumberOfModules=8
 Version=9
 @EndOfDesignText@
 #Region  Project Attributes 
@@ -76,6 +80,7 @@ Sub Globals
 	Private MDB As MSMaterialDrawerBuilder
 	Private MD As MSMaterialDrawer
 
+	Private clv As CustomListView
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
@@ -128,6 +133,7 @@ Sub OKButton_Click
 	End If
 	If Success=True Then
 		GenMenu
+		ListNotifications
 	End If
 End Sub
 Sub LoadLoginValues
@@ -169,7 +175,7 @@ Sub GenMenu
 		MDB.AddPrimaryDrawerItem("Notifiche",Null,Null,"",True,10,"")
 	End If
 	If gUser.isAdmin Or gUser.isAgent Then
-		MDB.AddPrimaryDrawerItem("Azienda",Null,Null,"",True,20,"")
+		MDB.AddPrimaryDrawerItem("Aziende",Null,Null,"",True,20,"")
 	End If
 	
 	
@@ -210,4 +216,63 @@ Sub LoadOrgs As ResumableSub
 		gOrgs.Initialize
 		Return gOrgs.LoadJson(sJson)
 	End If
+End Sub
+Sub MD_ItemClick(Position As Int, Identifier As Int)
+	Select Case Identifier
+		Case 10
+			ListNotifications
+		Case 20
+			ListOrgs
+	End Select
+End Sub
+Sub ListOrgs
+	pContent.RemoveAllViews
+	pContent.LoadLayout("layclv")
+	Dim cText As CSBuilder
+	Dim Org As cOrg
+	Dim n As Int
+	gOrgs.lOrgs.Sorttype("name",True)
+	For n=0 To gOrgs.lOrgs.Size-1
+		Org=gOrgs.lOrgs.Get(n)
+		cText.Initialize		
+		cText.Append(Org.name)
+		cText.PopAll
+		clv.AddTextItem(cText,Org.id)
+	Next
+End Sub
+Sub ListNotifications
+	pContent.RemoveAllViews	
+	pContent.LoadLayout("layclv")
+	Dim cText As CSBuilder
+	
+	
+	
+	Dim j As HttpJob
+	j.Initialize("",Me)
+	j=gLink.GetNotifications(j)
+	ProgressDialogShow(gL.LoadingNotifications)
+	Wait For (j) JobDone(j As HttpJob)
+	ProgressDialogHide
+	If j.Success=True Then
+		Dim sJson As String
+		sJson=j.GetString
+		Dim jP As JSONParser
+		jP.Initialize(sJson)
+		Dim ListN As List
+		ListN=jP.NextArray
+		Dim n As Int
+		For n=0 To ListN.Size-1
+			cText.Initialize
+			cText.Append(ListN.Get(n))
+			cText.PopAll
+			clv.AddTextItem(cText,Null)
+		Next
+		
+	End If
+	j.Release
+	
+	
+End Sub
+Sub clv_ItemClick (Index As Int, Value As Object)
+	
 End Sub

@@ -6,6 +6,7 @@ Version=9
 @EndOfDesignText@
 Sub Class_Globals
 	Private mOrgs As Map
+	Public lOrgs As List
 End Sub
 
 'Initializes the object. You can add parameters to this method if needed.
@@ -16,7 +17,9 @@ Sub LoadJson(sJson As String) As Boolean
 	Try
 		Dim jP As JSONParser
 		jP.Initialize(sJson)
+		
 		mOrgs.Initialize
+		lOrgs.Initialize
 		
 		Dim listOrgs As List
 		listOrgs=jP.NextArray
@@ -30,7 +33,10 @@ Sub LoadJson(sJson As String) As Boolean
 			jOrg.id=mOrg.Get("id")
 			jOrg.active=mOrg.Get("active")
 			jOrg.name=mOrg.Get("name")
-			mOrgs.Put(jOrg.id,jOrg)
+			If jOrg.active=True Then
+				mOrgs.Put(jOrg.id,jOrg)
+				lOrgs.Add(jOrg)			
+			End If
 		Next		
 		Return True
 	Catch

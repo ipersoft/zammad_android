@@ -28,3 +28,11 @@ public Sub LoadingOrganizations As String
 			Return "Loading organizations ..."
 	End Select
 End Sub
+public Sub LoadingNotifications As String
+	Select Case LANGUAGE
+		Case "ITA"
+			Return "Caricamento notifiche ..."
+		Case "ENG"
+			Return "Loading notifications ..."
+	End Select
+End Sub
