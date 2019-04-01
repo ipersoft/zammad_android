@@ -27,6 +27,10 @@ public Sub GetOrgs(j As HttpJob)	As HttpJob
 	j.Download(c.URL & "/api/v1/organizations/")
 	Return BasicConfig(j)
 End Sub
+public Sub GetUsers(j As HttpJob)	As HttpJob
+	j.Download(c.URL & "/api/v1/users/")
+	Return BasicConfig(j)
+End Sub
 public Sub GetNotifications(j As HttpJob) As HttpJob
 	j.Download(c.URL & "/api/v1/online_notifications/")
 	Return BasicConfig(j)

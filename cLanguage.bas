@@ -36,3 +36,11 @@ public Sub LoadingNotifications As String
 			Return "Loading notifications ..."
 	End Select
 End Sub
+public Sub LoadingUsers As String
+	Select Case LANGUAGE
+		Case "ITA"
+			Return "Caricamento utenti ..."
+		Case "ENG"
+			Return "Loading users ..."
+	End Select
+End Sub
