@@ -7,6 +7,7 @@ Version=9
 Sub Class_Globals
 	Public c As cConnection	
 	Public m As cMy
+	Public l As cLogin
 End Sub
 
 'Initializes the object. You can add parameters to this method if needed.
@@ -20,7 +21,7 @@ private Sub BasicConfig(j As HttpJob) As HttpJob
 	Return j
 End Sub
 public Sub GetUser(j As HttpJob)	As HttpJob
-	j.Download(c.URL & "/api/v1/users/me")
+	j.Download(c.URL & "/api/v1/users/me?expand=true")
 	Return BasicConfig(j)
 End Sub
 public Sub GetOrgs(j As HttpJob)	As HttpJob
@@ -33,5 +34,9 @@ public Sub GetUsers(j As HttpJob)	As HttpJob
 End Sub
 public Sub GetNotifications(j As HttpJob) As HttpJob
 	j.Download(c.URL & "/api/v1/online_notifications/")
+	Return BasicConfig(j)
+End Sub
+public Sub GetTicketUser(j As HttpJob) As HttpJob
+	j.Download(c.URL & "/api/v1/tickets/search?query=customer_id:" & l.id & "&expand=true&sort_by=created_at&order_by=desc")
 	Return BasicConfig(j)
 End Sub

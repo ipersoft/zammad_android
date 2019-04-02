@@ -44,3 +44,11 @@ public Sub LoadingUsers As String
 			Return "Loading users ..."
 	End Select
 End Sub
+public Sub LoadingTicket As String
+	Select Case LANGUAGE
+		Case "ITA"
+			Return "Caricamento tickets ..."
+		Case "ENG"
+			Return "Loading tickets ..."
+	End Select
+End Sub

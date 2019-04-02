@@ -31,7 +31,7 @@ Module5=cOrgs
 Module6=cLanguage
 Module7=types
 Module8=cUsers
-Module9=cLogin
+Module9=mReadJSON
 NumberOfFiles=5
 NumberOfLibraries=11
 NumberOfModules=9
@@ -119,29 +119,31 @@ Sub OKButton_Click
 	gLink.c=gConnection
 	gLink.m=gMy
 	
+	
 	ProgressDialogShow(gL.ConnectionInProgress)
 	Wait For (Login) Complete (Success As Boolean)	
 	ProgressDialogHide
 	If Success=False Then
-		Msgbox("Error","")
+		Msgbox("Authentication failed","")
 	End If
+'	If Success=True Then
+'		ProgressDialogShow(gL.LoadingOrganizations)
+'		Wait For (LoadOrgs) Complete (Success As Boolean)
+'		ProgressDialogHide
+'		If Success=False Then
+'			Msgbox(LastException,"")
+'		End If
+'	End If
+'	If Success=True Then
+'		ProgressDialogShow(gL.LoadingUsers)
+'		Wait For (LoadUsers) Complete (Success As Boolean)
+'		ProgressDialogHide
+'		If Success=False Then
+'			Msgbox(LastException,"")
+'		End If
+'	End If
 	If Success=True Then
-		ProgressDialogShow(gL.LoadingOrganizations)
-		Wait For (LoadOrgs) Complete (Success As Boolean)
-		ProgressDialogHide
-		If Success=False Then
-			Msgbox(LastException,"")
-		End If
-	End If
-	If Success=True Then
-		ProgressDialogShow(gL.LoadingUsers)
-		Wait For (LoadUsers) Complete (Success As Boolean)
-		ProgressDialogHide
-		If Success=False Then
-			Msgbox(LastException,"")
-		End If
-	End If
-	If Success=True Then
+		gLink.l=gLogin
 		GenMenu
 		'ListNotifications
 	End If
@@ -161,8 +163,8 @@ Sub GenMenu
 	
 	Dim MSP As MSProfile
 	'    Dim PDB1 As BitmapDrawable : PDB1.Initialize(LoadBitmap(File.DirAssets,"profile2.jpg"))
-	MSP.withName(gLogin.firstname & " " & gLogin.lastname).withEmail(gLogin.login)
-		Dim msa As MSAccountHeaderBuilder
+	MSP.withName(gLogin.firstname & " " & gLogin.lastname).withEmail(gLogin.organization)
+	Dim msa As MSAccountHeaderBuilder
 	msa.Initialize("MSA")
 	Dim Profiles(1) As MSProfile
 	Profiles(0) = MSP
@@ -180,16 +182,18 @@ Sub GenMenu
 	MDB.withActionbarToggle(True)
 	MDB.withActionbarToggleAnimated(True)
 	MDB.withDisplayBelowToolbar(False)
-	
-	If gLogin.isAdmin Or gLogin.isAgent Or gLogin.isCustomer  Then
-		MDB.AddPrimaryDrawerItem("Notifiche",Null,Null,"",True,10,"")
+	If gLogin.isCustomer Then
+		MDB.AddPrimaryDrawerItem("Ticket",Null,Null,"",True,20,"")
 	End If
-	If gLogin.isAdmin Or gLogin.isAgent Then
-		MDB.AddPrimaryDrawerItem("Aziende",Null,Null,"",True,20,"")
-	End If
-	If gLogin.isAdmin Or gLogin.isAgent Then
-		MDB.AddPrimaryDrawerItem("Utenti",Null,Null,"",True,30,"")
-	End If
+'	If gLogin.isAdmin Or gLogin.isAgent Or gLogin.isCustomer  Then
+'		MDB.AddPrimaryDrawerItem("Notifiche",Null,Null,"",True,10,"")
+'	End If
+'	If gLogin.isAdmin Or gLogin.isAgent Then
+'		MDB.AddPrimaryDrawerItem("Aziende",Null,Null,"",True,20,"")
+'	End If
+'	If gLogin.isAdmin Or gLogin.isAgent Then
+'		MDB.AddPrimaryDrawerItem("Utenti",Null,Null,"",True,30,"")
+'	End If
 	
 	MD = MDB.Build
 End Sub
@@ -207,122 +211,150 @@ Sub Login As ResumableSub
 	Else
 		sJson=j.GetString
 		j.Release
-		gLogin.Initialize
-		Return gLogin.LoadJson(sJson)
+		gLogin=mReadJSON.JSONLogin(sJson)
+		Return gLogin<>Null
 	End If	
 End Sub
-Sub LoadOrgs As ResumableSub
-	Dim j As HttpJob
-	Dim sJson As String
-	
-	j.Initialize("",Me)
-	j=gLink.GetOrgs(j)
-	
-	Wait For (j) JobDone(j As HttpJob)
-	If j.Success=False Then
-		Return False
-		j.Release
-	Else
-		sJson=j.GetString
-		j.Release
-		gOrgs.Initialize
-		Return gOrgs.LoadJson(sJson)
-	End If
-End Sub
-Sub LoadUsers As ResumableSub
-	Dim j As HttpJob
-	Dim sJson As String
-	
-	j.Initialize("",Me)
-	j=gLink.GetUsers(j)
-	
-	Wait For (j) JobDone(j As HttpJob)
-	If j.Success=False Then
-		Return False
-		j.Release
-	Else
-		sJson=j.GetString
-		j.Release
-		gUsers.Initialize
-		Return gUsers.LoadJson(sJson)
-	End If
-End Sub
+'Sub LoadOrgs As ResumableSub
+'	Dim j As HttpJob
+'	Dim sJson As String
+'	
+'	j.Initialize("",Me)
+'	j=gLink.GetOrgs(j)
+'	
+'	Wait For (j) JobDone(j As HttpJob)
+'	If j.Success=False Then
+'		Return False
+'		j.Release
+'	Else
+'		sJson=j.GetString
+'		j.Release
+'		gOrgs.Initialize
+'		Return gOrgs.LoadJson(sJson)
+'	End If
+'End Sub
+'Sub LoadUsers As ResumableSub
+'	Dim j As HttpJob
+'	Dim sJson As String
+'	
+'	j.Initialize("",Me)
+'	j=gLink.GetUsers(j)
+'	
+'	Wait For (j) JobDone(j As HttpJob)
+'	If j.Success=False Then
+'		Return False
+'		j.Release
+'	Else
+'		sJson=j.GetString
+'		j.Release
+'		gUsers.Initialize
+'		Return gUsers.LoadJson(sJson)
+'	End If
+'End Sub
 Sub MD_ItemClick(Position As Int, Identifier As Int)
 	Select Case Identifier
-		Case 10
-			ListNotifications
 		Case 20
-			ListOrgs
-		Case 30
-			ListUsers
+			ListTicketUser
 	End Select
 End Sub
-Sub ListOrgs
+Sub ListTicketUser
 	pContent.RemoveAllViews
 	pContent.LoadLayout("layclv")
 	Dim cText As CSBuilder
-	Dim Org As cOrg
-	Dim n As Int
-	gOrgs.lOrgs.Sorttype("name",True)
-	For n=0 To gOrgs.lOrgs.Size-1
-		Org=gOrgs.lOrgs.Get(n)
-		cText.Initialize		
-		cText.Append(Org.name)
-		cText.PopAll
-		clv.AddTextItem(cText,Org.id)
-	Next
-End Sub
-Sub ListUsers
-	pContent.RemoveAllViews
-	pContent.LoadLayout("layclv")
-	Dim cText As CSBuilder
-	Dim User As cUser
-	Dim n As Int
-	gUsers.lGlobal.Sorttype("firstname",True)
-	For n=0 To gUsers.lGlobal.Size-1
-		User=gUsers.lGlobal.Get(n)
-		cText.Initialize		
-		cText.Append(User.firstname & " " & User.lastname).Append(CRLF)
-		If User.organization_id<>Null Then
-			cText.Size(8).Append(gOrgs.org(User.organization_id).name)
-		End If
-		cText.PopAll
-		clv.AddTextItem(cText,User.id)
-	Next
-End Sub
-Sub ListNotifications
-	pContent.RemoveAllViews	
-	pContent.LoadLayout("layclv")
-	Dim cText As CSBuilder
-	
-	
-	
 	Dim j As HttpJob
 	j.Initialize("",Me)
-	j=gLink.GetNotifications(j)
-	ProgressDialogShow(gL.LoadingNotifications)
+	j=gLink.GetTicketUser(j)
+	ProgressDialogShow(gL.LoadingTicket)
 	Wait For (j) JobDone(j As HttpJob)
 	ProgressDialogHide
 	If j.Success=True Then
-		Dim sJson As String
-		sJson=j.GetString
-		Dim jP As JSONParser
-		jP.Initialize(sJson)
-		Dim ListN As List
-		ListN=jP.NextArray
+		Dim ListTicket As List
+		ListTicket=mReadJSON.JSONListTicket(j.GetString)
 		Dim n As Int
-		For n=0 To ListN.Size-1
+		For n=0 To ListTicket.Size-1
+			Dim gTicket As cTicket
+			gTicket=ListTicket.Get(n)
 			cText.Initialize
-			cText.Append(ListN.Get(n))
+			cText.Append(gTicket.title)
 			cText.PopAll
-			clv.AddTextItem(cText,Null)
+			clv.AddTextItem(cText,gTicket)
 		Next
 		
 	End If
 	j.Release
-	
-	
 End Sub
+
+'Sub ListOrgs
+'	pContent.RemoveAllViews
+'	pContent.LoadLayout("layclv")
+'	Dim cText As CSBuilder
+'	Dim Org As cOrg
+'	Dim n As Int
+'	gOrgs.lOrgs.Sorttype("name",True)
+'	For n=0 To gOrgs.lOrgs.Size-1
+'		Org=gOrgs.lOrgs.Get(n)
+'		cText.Initialize		
+'		cText.Append(Org.name)
+'		cText.PopAll
+'		clv.AddTextItem(cText,Org.id)
+'	Next
+'End Sub
+'Sub ListUsers
+'	pContent.RemoveAllViews
+'	pContent.LoadLayout("layclv")
+'	Dim cText As CSBuilder
+'	Dim User As cUser
+'	Dim n As Int
+'	gUsers.lGlobal.Sorttype("firstname",True)
+'	For n=0 To gUsers.lGlobal.Size-1
+'		User=gUsers.lGlobal.Get(n)
+'		cText.Initialize		
+'		cText.Append(User.firstname & " " & User.lastname).Append(CRLF)
+'		If User.organization_id<>Null Then
+'			cText.Size(8).Append(gOrgs.org(User.organization_id).name)
+'		End If
+'		cText.PopAll
+'		clv.AddTextItem(cText,User.id)
+'	Next
+'End Sub
+'Sub ListNotifications
+'	pContent.RemoveAllViews	
+'	pContent.LoadLayout("layclv")
+'	Dim cText As CSBuilder
+'	
+'	
+'	
+'	Dim j As HttpJob
+'	j.Initialize("",Me)
+'	j=gLink.GetNotifications(j)
+'	ProgressDialogShow(gL.LoadingNotifications)
+'	Wait For (j) JobDone(j As HttpJob)
+'	ProgressDialogHide
+'	If j.Success=True Then
+'		Dim sJson As String
+'		sJson=j.GetString
+'		Dim jP As JSONParser
+'		jP.Initialize(sJson)
+'		Dim ListN As List
+'		ListN=jP.NextArray
+'		Dim n As Int
+'		For n=0 To ListN.Size-1
+'			cText.Initialize
+'			cText.Append(ListN.Get(n))
+'			cText.PopAll
+'			clv.AddTextItem(cText,Null)
+'		Next
+'		
+'	End If
+'	j.Release
+'	
+'	
+'End Sub
 Sub clv_ItemClick (Index As Int, Value As Object)
-	
+	Sleep(400)
+	If Value Is cTicket Then
+		Dim gTicket As cTicket
+		gTicket=Value
+		Msgbox(gTicket.state,"")
+	End If
 End Sub
