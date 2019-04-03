@@ -36,7 +36,7 @@ public Sub GetNotifications(j As HttpJob) As HttpJob
 	j.Download(c.URL & "/api/v1/online_notifications/")
 	Return BasicConfig(j)
 End Sub
-public Sub GetTicketUser(j As HttpJob) As HttpJob
+public Sub GetTicketCustomer(j As HttpJob) As HttpJob
 	j.Download(c.URL & "/api/v1/tickets/search?query=customer_id:" & l.id & "&expand=true&sort_by=created_at&order_by=desc")
 	Return BasicConfig(j)
 End Sub

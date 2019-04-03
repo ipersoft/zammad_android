@@ -30,8 +30,8 @@ Module4=cMy
 Module5=cOrgs
 Module6=cLanguage
 Module7=types
-Module8=cUsers
-Module9=mReadJSON
+Module8=mReadJSON
+Module9=cUsers
 NumberOfFiles=5
 NumberOfLibraries=11
 NumberOfModules=9
@@ -89,7 +89,7 @@ Sub Activity_Create(FirstTime As Boolean)
 	'Do not forget to load the layout file created with the visual designer. For example:
 	gMy.Initialize
 	gL.Initialize
-	gL.LANGUAGE="ITA"
+	gL.LANGUAGE=gL.LANGUAGE_ITA
 	
 	kC=Starter.kConfig
 	Activity.LoadLayout("LayoutLogin")
@@ -120,7 +120,7 @@ Sub OKButton_Click
 	gLink.m=gMy
 	
 	
-	ProgressDialogShow(gL.ConnectionInProgress)
+	ProgressDialogShow(gL.GetString("Connection in progress") & " ...")
 	Wait For (Login) Complete (Success As Boolean)	
 	ProgressDialogHide
 	If Success=False Then
@@ -182,8 +182,10 @@ Sub GenMenu
 	MDB.withActionbarToggle(True)
 	MDB.withActionbarToggleAnimated(True)
 	MDB.withDisplayBelowToolbar(False)
+	MDB.AddPrimaryDrawerItem(gL.GetString("Notifications"),Null,Null,"",True,10,"")
 	If gLogin.isCustomer Then
 		MDB.AddPrimaryDrawerItem("Ticket",Null,Null,"",True,20,"")
+		ListTicketCustomer
 	End If
 '	If gLogin.isAdmin Or gLogin.isAgent Or gLogin.isCustomer  Then
 '		MDB.AddPrimaryDrawerItem("Notifiche",Null,Null,"",True,10,"")
@@ -196,6 +198,7 @@ Sub GenMenu
 '	End If
 	
 	MD = MDB.Build
+	
 End Sub
 Sub Login As ResumableSub
 	Dim j As HttpJob
@@ -254,17 +257,17 @@ End Sub
 Sub MD_ItemClick(Position As Int, Identifier As Int)
 	Select Case Identifier
 		Case 20
-			ListTicketUser
+			ListTicketCustomer
 	End Select
 End Sub
-Sub ListTicketUser
+Sub ListTicketCustomer
 	pContent.RemoveAllViews
 	pContent.LoadLayout("layclv")
 	Dim cText As CSBuilder
 	Dim j As HttpJob
 	j.Initialize("",Me)
-	j=gLink.GetTicketUser(j)
-	ProgressDialogShow(gL.LoadingTicket)
+	j=gLink.GetTicketCustomer(j)
+	ProgressDialogShow(gL.GetString("Loading ticket") & " ...")
 	Wait For (j) JobDone(j As HttpJob)
 	ProgressDialogHide
 	If j.Success=True Then
@@ -275,7 +278,9 @@ Sub ListTicketUser
 			Dim gTicket As cTicket
 			gTicket=ListTicket.Get(n)
 			cText.Initialize
-			cText.Append(gTicket.title)
+			cText.Size(12).Append(gL.GetString("Number") & ": " & gTicket.number).PopAll.Append(CRLF)
+			cText.Size(20).Color(Colors.Black).Bold.Append(gL.GetString("Title") & ": ").Append(gTicket.title).PopAll.Append(CRLF).Append(CRLF)
+			cText.Size(12).Append(gL.GetString("Status") & ": " & gL.GetString(gTicket.state))
 			cText.PopAll
 			clv.AddTextItem(cText,gTicket)
 		Next
@@ -318,11 +323,10 @@ End Sub
 '	Next
 'End Sub
 'Sub ListNotifications
-'	pContent.RemoveAllViews	
+'	pContent.RemoveAllViews
 '	pContent.LoadLayout("layclv")
 '	Dim cText As CSBuilder
-'	
-'	
+'
 '	
 '	Dim j As HttpJob
 '	j.Initialize("",Me)
