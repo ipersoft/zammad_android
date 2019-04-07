@@ -24,6 +24,7 @@ Library8=json
 Library9=ime
 ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="14" android:targetSdkVersion="26"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.DarkTheme)~\n~'End of default text.~\n~SetApplicationAttribute(android:theme, "@style/MyAppTheme")~\n~~\n~CreateResource(values, theme.xml,~\n~<resources>~\n~    <style name="MyAppTheme" parent="@style/Theme.AppCompat.Light.DarkActionBar">~\n~        <item name="colorPrimary">#FF0000</item>~\n~        <item name="colorPrimaryDark">#FF3232</item>~\n~        <item name="colorAccent">#FFA726</item>~\n~        <item name="windowNoTitle">true</item>~\n~        <item name="windowActionBar">false</item>~\n~~\n~    </style>~\n~</resources>~\n~)
 Module1=Starter
+Module10=acTicket
 Module2=KeyValueStore
 Module3=cLink
 Module4=cMy
@@ -34,7 +35,7 @@ Module8=mReadJSON
 Module9=cUsers
 NumberOfFiles=5
 NumberOfLibraries=11
-NumberOfModules=9
+NumberOfModules=10
 Version=9
 @EndOfDesignText@
 #Region  Project Attributes 
@@ -182,7 +183,7 @@ Sub GenMenu
 	MDB.withActionbarToggle(True)
 	MDB.withActionbarToggleAnimated(True)
 	MDB.withDisplayBelowToolbar(False)
-	MDB.AddPrimaryDrawerItem(gL.GetString("Notifications"),Null,Null,"",True,10,"")
+	'MDB.AddPrimaryDrawerItem(gL.GetString("Notifications"),Null,Null,"",True,10,"")
 	If gLogin.isCustomer Then
 		MDB.AddPrimaryDrawerItem("Ticket",Null,Null,"",True,20,"")
 		ListTicketCustomer
@@ -359,6 +360,7 @@ Sub clv_ItemClick (Index As Int, Value As Object)
 	If Value Is cTicket Then
 		Dim gTicket As cTicket
 		gTicket=Value
-		Msgbox(gTicket.state,"")
+		acTicket.IDTicket=gTicket.id
+		StartActivity(acTicket)
 	End If
 End Sub

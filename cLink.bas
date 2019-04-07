@@ -40,3 +40,11 @@ public Sub GetTicketCustomer(j As HttpJob) As HttpJob
 	j.Download(c.URL & "/api/v1/tickets/search?query=customer_id:" & l.id & "&expand=true&sort_by=created_at&order_by=desc")
 	Return BasicConfig(j)
 End Sub
+public Sub GetArticlesTicket(j As HttpJob, ID As Int) As HttpJob
+	j.Download(c.URL & "/api/v1/ticket_articles/by_ticket/" & ID)
+	Return BasicConfig(j)	
+End Sub
+Public Sub GetGenericLink(j As HttpJob,sLink As String) As HttpJob
+	j.Download(c.URL & sLink)
+	Return BasicConfig(j)
+End Sub
