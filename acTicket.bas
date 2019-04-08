@@ -13,7 +13,7 @@ Version=9
 Sub Process_Globals
 	'These global variables will be declared once when the application starts.
 	'These variables can be accessed from all modules.
-	Public IDTicket As Int
+	Public gTicket As cTicket
 End Sub
 
 Sub Globals
@@ -23,6 +23,9 @@ Sub Globals
 	Private pContent As Panel
 	Private ABHelper As ACActionBar
 	Private webv As WebView
+	Private VP As AHViewPager
+	Private PC As AHPageContainer
+	Private TabLayout As DSTabLayout
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
@@ -31,10 +34,21 @@ Sub Activity_Create(FirstTime As Boolean)
 	ABHelper.Initialize
 	ABHelper.ShowUpIndicator = True
 	ActionBar.InitMenuListener
+	ActionBar.Elevation=0
+	ActionBar.Title=gTicket.title
+	ActionBar.SubTitle=Main.gL.GetString("Status") & ": " & Main.gL.GetString(gTicket.state)
+	pContent.LoadLayout("laypaper")
+	
+	PC.Initialize
+	Dim ac As AppCompat
+	TabLayout.Color = ac.GetThemeAttribute("colorPrimary")
+	VP.PageContainer = PC
+	
+	TabLayout.SetViewPager(VP)
 
 	Dim j As HttpJob
 	j.Initialize("",Me)
-	j=Main.gLink.GetArticlesTicket(j,IDTicket)
+	j=Main.gLink.GetArticlesTicket(j,gTicket.id)
 	ProgressDialogShow(Main.gL.GetString("Loading ticket") & " ...")
 	Wait For (j) JobDone(j As HttpJob)
 	
@@ -44,10 +58,22 @@ Sub Activity_Create(FirstTime As Boolean)
 		Dim lArticles As List
 		Dim mArticle As Map
 		lArticles=jP.NextArray
-		mArticle=lArticles.Get(0)
-		pContent.LoadLayout("layweb")
-		Wait For  (ParseBody(mArticle.Get("body"))) complete (sWeb As String)
-		webv.LoadHtml(sWeb)
+		Dim n As Int
+		For n=0 To lArticles.Size-1
+			mArticle=lArticles.Get(n)
+			Log(mArticle.Get("updated_at"))
+			'iDate=xi.Parse( mArticle.Get("updated_at"))
+			Dim p As Panel
+			p.Initialize("")
+			p.LoadLayout("layweb")
+			Wait For  (ParseBody(mArticle.Get("body"))) complete (sWeb As String)
+			webv.LoadHtml(sWeb)
+			'PC.AddPage(p,DateTime.GetDayOfMonth(iDate) & " " & DateUtils.GetMonthName(iDate) & "(" &  (n+1) & "/" & lArticles.Size & ")")
+			PC.AddPage(p,(n+1) & "/" & lArticles.Size )
+			webv.Height=VP.Height
+			webv.Width=VP.Width
+		Next
+		VP.CurrentPage=0
 		ProgressDialogHide
 	Else
 		ProgressDialogHide
@@ -102,3 +128,4 @@ End Sub
 Sub webv_OverrideUrl (Url As String) As Boolean
 	Return True
 End Sub
+
