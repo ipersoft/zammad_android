@@ -48,3 +48,7 @@ Public Sub GetGenericLink(j As HttpJob,sLink As String) As HttpJob
 	j.Download(c.URL & sLink)
 	Return BasicConfig(j)
 End Sub
+public Sub GetTicketAgentStatus(j As HttpJob,status As String) As HttpJob
+	j.Download(c.URL & "/api/v1/tickets/search?query=owner_id:" & l.id  & " AND state:" & status & "&expand=true&sort_by=created_at&order_by=asc")
+	Return BasicConfig(j)
+End Sub

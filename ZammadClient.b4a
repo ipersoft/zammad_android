@@ -191,9 +191,15 @@ Sub GenMenu
 	MDB.withActionbarToggleAnimated(True)
 	MDB.withDisplayBelowToolbar(False)
 	'MDB.AddPrimaryDrawerItem(gL.GetString("Notifications"),Null,Null,"",True,10,"")
-	If gLogin.isCustomer Then
-		MDB.AddPrimaryDrawerItem("Ticket",Null,Null,"",True,20,"")
-		ListTicketCustomer
+	If gLogin.isCustomer Or gLogin.isAgent Then
+		MDB.AddPrimaryDrawerItem("My Ticket",Null,Null,"",True,20,"")
+		MD_ItemClick(1, 20)
+	End If
+	If gLogin.isCustomer Or gLogin.isAgent Then
+		MDB.AddPrimaryDrawerItem("Agent Ticket New",Null,Null,"",True,30,"")
+	End If
+	If gLogin.isCustomer Or gLogin.isAgent Then
+		MDB.AddPrimaryDrawerItem("Agent Ticket Open",Null,Null,"",True,40,"")
 	End If
 '	If gLogin.isAdmin Or gLogin.isAgent Or gLogin.isCustomer  Then
 '		MDB.AddPrimaryDrawerItem("Notifiche",Null,Null,"",True,10,"")
@@ -263,18 +269,30 @@ End Sub
 '	End If
 'End Sub
 Sub MD_ItemClick(Position As Int, Identifier As Int)
+	
 	Select Case Identifier
 		Case 20
-			ListTicketCustomer
+			ActionBar.SubTitle="My ticket"
+			GetListTicket(True,"",False)
+		Case 30
+			ActionBar.SubTitle="Agent Ticket New"
+			GetListTicket(False,"new",True)
+		Case 40
+			ActionBar.SubTitle="Agent Ticket Old"
+			GetListTicket(False,"open",True)
 	End Select
 End Sub
-Sub ListTicketCustomer
+Sub GetListTicket(Customer As Boolean,Status As String,OrgVisible As Boolean)
 	pContent.RemoveAllViews
 	pContent.LoadLayout("layclv")
 	Dim cText As CSBuilder
 	Dim j As HttpJob
 	j.Initialize("",Me)
-	j=gLink.GetTicketCustomer(j)
+	If Customer Then
+		j=gLink.GetTicketCustomer(j)
+		Else
+		j=gLink.GetTicketAgentStatus(j,Status)
+	End If
 	ProgressDialogShow(gL.GetString("Loading ticket") & " ...")
 	Wait For (j) JobDone(j As HttpJob)
 	ProgressDialogHide
@@ -287,7 +305,10 @@ Sub ListTicketCustomer
 			gTicket=ListTicket.Get(n)
 			cText.Initialize
 			cText.Size(12).Append(gL.GetString("Number") & ": " & gTicket.number).PopAll.Append(CRLF)
-			cText.Size(20).Color(Colors.Black).Bold.Append(gL.GetString("Title") & ": ").Append(gTicket.title).PopAll.Append(CRLF).Append(CRLF)
+			If OrgVisible Then
+				cText.Size(14).Bold.Append(gTicket.organization).PopAll.Append(CRLF)
+			End If
+			cText.Size(20).Color(Colors.Black).Bold.Append(gTicket.title).PopAll.Append(CRLF).Append(CRLF)
 			cText.Size(12).Append(gL.GetString("Status") & ": " & gL.GetString(gTicket.state))
 			cText.PopAll
 			clv.AddTextItem(cText,gTicket)

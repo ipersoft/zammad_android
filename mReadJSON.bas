@@ -65,6 +65,7 @@ public Sub JSONListTicket(sJSON As String) As List
 		cOBJ.state=mOBJ.Get("state")
 		cOBJ.number=mOBJ.Get("number")
 		cOBJ.title=mOBJ.Get("title")
+		cOBJ.organization=mOBJ.Get("organization")
 		cListOBJ.Add(cOBJ)		
 	Next
 	Return cListOBJ
