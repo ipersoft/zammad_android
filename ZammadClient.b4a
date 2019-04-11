@@ -20,6 +20,8 @@ Library12=designsupport
 Library13=ahviewpager
 Library14=dateutils
 Library15=ahlocale
+Library16=dialogs
+Library17=xui views
 Library2=sql
 Library3=b4xencryption
 Library4=randomaccessfile
@@ -40,7 +42,7 @@ Module7=cLanguage
 Module8=types
 Module9=mReadJSON
 NumberOfFiles=6
-NumberOfLibraries=15
+NumberOfLibraries=17
 NumberOfModules=10
 Version=9
 @EndOfDesignText@
@@ -88,9 +90,10 @@ Sub Globals
 	Private MD As MSMaterialDrawer
 
 	Private clv As CustomListView
-	Private UsernameText As DSFloatLabelEditText
-	Private PasswordText As DSFloatLabelEditText
-	Private ServerText As DSFloatLabelEditText
+
+	Private PasswordText As B4XFloatTextField
+	Private UsernameText As B4XFloatTextField
+	Private ServerText As B4XFloatTextField
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
@@ -102,7 +105,8 @@ Sub Activity_Create(FirstTime As Boolean)
 	kC=Starter.kConfig
 	Activity.LoadLayout("LayoutLogin")
 	LoadLoginValues
-	PasswordText.InputType=Bit.Or(PasswordText.InputType, 0x00000080)
+	Dim et As EditText = PasswordText.TextField
+	et.InputType=Bit.Or(et.InputType, 0x00000080)
 End Sub
 
 Sub Activity_Resume
@@ -168,6 +172,7 @@ Sub GenMenu
 	Activity.RemoveAllViews
 	Activity.LoadLayout("layhome")
 	ActionBar.Title="Zammad Android"
+	ActionBar.InitMenuListener
 	
 	Dim MSP As MSProfile
 	'    Dim PDB1 As BitmapDrawable : PDB1.Initialize(LoadBitmap(File.DirAssets,"profile2.jpg"))
@@ -177,7 +182,6 @@ Sub GenMenu
 	Dim Profiles(1) As MSProfile
 	Profiles(0) = MSP
 	msa.addProfiles(Profiles)
-	
 	Dim HeaderBackground As BitmapDrawable
 	HeaderBackground.Initialize(LoadBitmap(File.DirAssets,"header.jpg"))	
 	msa.withHeaderBackground(HeaderBackground)
@@ -193,7 +197,6 @@ Sub GenMenu
 	'MDB.AddPrimaryDrawerItem(gL.GetString("Notifications"),Null,Null,"",True,10,"")
 	If gLogin.isCustomer Or gLogin.isAgent Then
 		MDB.AddPrimaryDrawerItem("My Ticket",Null,Null,"",True,20,"")
-		MD_ItemClick(1, 20)
 	End If
 	If gLogin.isCustomer Or gLogin.isAgent Then
 		MDB.AddPrimaryDrawerItem("Agent Ticket New",Null,Null,"",True,30,"")
@@ -212,6 +215,10 @@ Sub GenMenu
 '	End If
 	
 	MD = MDB.Build
+	Sleep(300)
+	If gLogin.isCustomer Or gLogin.isAgent Then
+		MD_ItemClick(1, 20)
+	End If
 	
 End Sub
 Sub Login As ResumableSub
@@ -268,11 +275,22 @@ End Sub
 '		Return gUsers.LoadJson(sJson)
 '	End If
 'End Sub
+Sub ActionBar_MenuItemClick (Item As ACMenuItem)
+	If Item.Checkable Then
+		Item.Checked=Not(Item.Checked)
+		Select Case MD.Selection
+			Case  MD.getPositionFromIdentifier(20)
+			GetListTicket(True,"",False)
+		End Select
+	End If
+	
+End Sub
 Sub MD_ItemClick(Position As Int, Identifier As Int)
 	
 	Select Case Identifier
 		Case 20
 			ActionBar.SubTitle="My ticket"
+			SetMenuCustomer
 			GetListTicket(True,"",False)
 		Case 30
 			ActionBar.SubTitle="Agent Ticket New"
@@ -282,6 +300,26 @@ Sub MD_ItemClick(Position As Int, Identifier As Int)
 			GetListTicket(False,"open",True)
 	End Select
 End Sub
+Sub SetMenuCustomer
+	Try
+		ActionBar.Menu.Clear
+		Dim item As ACMenuItem
+		ActionBar.Menu.add(1,1,"Status",Null).ShowAsAction=item.SHOW_AS_ACTION_NEVER
+		item=ActionBar.Menu.FindItem(1)
+		item.Enabled=False
+		ActionBar.Menu.add(2,2,"Open",Null).ShowAsAction=item.SHOW_AS_ACTION_NEVER
+		item=ActionBar.Menu.FindItem(2)
+		item.Checkable=True
+		item.Checked=True
+		ActionBar.Menu.add(3,3,"Closed",Null).ShowAsAction=item.SHOW_AS_ACTION_NEVER
+		item=ActionBar.Menu.FindItem(3)
+		item.Checkable=True
+		item.Checked=False
+	Catch
+		Log(LastException)
+	End Try
+	
+End Sub
 Sub GetListTicket(Customer As Boolean,Status As String,OrgVisible As Boolean)
 	pContent.RemoveAllViews
 	pContent.LoadLayout("layclv")
@@ -289,7 +327,11 @@ Sub GetListTicket(Customer As Boolean,Status As String,OrgVisible As Boolean)
 	Dim j As HttpJob
 	j.Initialize("",Me)
 	If Customer Then
-		j=gLink.GetTicketCustomer(j)
+		Dim sO As ACMenuItem
+		Dim sC As ACMenuItem
+		sO=ActionBar.Menu.FindItem(2)
+		sC=ActionBar.Menu.FindItem(3)
+		j=gLink.GetTicketCustomer(j,sO.Checked,sC.Checked)
 		Else
 		j=gLink.GetTicketAgentStatus(j,Status)
 	End If

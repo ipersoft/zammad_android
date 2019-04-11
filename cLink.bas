@@ -36,8 +36,18 @@ public Sub GetNotifications(j As HttpJob) As HttpJob
 	j.Download(c.URL & "/api/v1/online_notifications/")
 	Return BasicConfig(j)
 End Sub
-public Sub GetTicketCustomer(j As HttpJob) As HttpJob
-	j.Download(c.URL & "/api/v1/tickets/search?query=customer_id:" & l.id & "&expand=true&sort_by=created_at&order_by=desc")
+public Sub GetTicketCustomer(j As HttpJob,StatusOpen As Boolean,StatusClosed As Boolean) As HttpJob
+	Dim sStatus As String
+	If StatusOpen And StatusClosed Then
+		sStatus=" state:(open OR closed)"
+	End If
+	If StatusOpen=True And StatusClosed=False Then
+		sStatus=" state:open"
+	End If
+	If StatusOpen=False And StatusClosed=True Then
+		sStatus=" state:closed"
+	End If
+	j.Download(c.URL & "/api/v1/tickets/search?query=customer_id:" & l.id & " AND " & sStatus & "&expand=true&sort_by=created_at&order_by=desc")
 	Return BasicConfig(j)
 End Sub
 public Sub GetArticlesTicket(j As HttpJob, ID As Int) As HttpJob

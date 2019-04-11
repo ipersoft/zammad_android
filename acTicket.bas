@@ -38,6 +38,8 @@ Sub Activity_Create(FirstTime As Boolean)
 	ActionBar.Title=gTicket.title
 	ActionBar.SubTitle=Main.gL.GetString("Status") & ": " & Main.gL.GetString(gTicket.state)
 	pContent.LoadLayout("laypaper")
+
+
 	
 	PC.Initialize
 	Dim ac As AppCompat
@@ -86,7 +88,9 @@ End Sub
 Sub ActionBar_NavigationItemClick
 	Activity.Finish
 End Sub
-
+Sub ActionBar_MenuItemClick (Item As ACMenuItem)
+	Msgbox(Item.Title,"")
+End Sub
 Sub Activity_Resume
 
 End Sub
