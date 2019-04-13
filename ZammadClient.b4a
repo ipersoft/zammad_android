@@ -1,27 +1,31 @@
 ﻿Build1=Default,it.ipersoft.zammad
 File1=header.jpg
-File2=layclv.bal
-File3=layhome.bal
-File4=LayoutLogin.bal
-File5=laypaper.bal
-File6=layweb.bal
+File2=layaddbutton.bal
+File3=layclv.bal
+File4=layhome.bal
+File5=laynewticket.bal
+File6=LayoutLogin.bal
+File7=laypaper.bal
+File8=layweb.bal
 FileGroup1=Default Group
 FileGroup2=Default Group
 FileGroup3=Default Group
 FileGroup4=Default Group
 FileGroup5=Default Group
 FileGroup6=Default Group
+FileGroup7=Default Group
+FileGroup8=Default Group
 Group=Default Group
 IconFile=
 Library1=core
-Library10=msmaterialdrawer
-Library11=xcustomlistview
-Library12=designsupport
-Library13=ahviewpager
-Library14=dateutils
-Library15=ahlocale
-Library16=dialogs
-Library17=xui views
+Library10=xcustomlistview
+Library11=designsupport
+Library12=ahviewpager
+Library13=dateutils
+Library14=ahlocale
+Library15=dialogs
+Library16=xui views
+Library17=reflection
 Library2=sql
 Library3=b4xencryption
 Library4=randomaccessfile
@@ -29,10 +33,11 @@ Library5=appcompat
 Library6=okhttp
 Library7=okhttputils2
 Library8=json
-Library9=ime
+Library9=msmaterialdrawer
 ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="14" android:targetSdkVersion="26"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.DarkTheme)~\n~'End of default text.~\n~SetApplicationAttribute(android:theme, "@style/MyAppTheme")~\n~~\n~CreateResource(values, theme.xml,~\n~<resources>~\n~    <style name="MyAppTheme" parent="@style/Theme.AppCompat.Light.DarkActionBar">~\n~        <item name="colorPrimary">#FF0000</item>~\n~        <item name="colorPrimaryDark">#FF3232</item>~\n~        <item name="colorAccent">#FFA726</item>~\n~        <item name="windowNoTitle">true</item>~\n~        <item name="windowActionBar">false</item>~\n~~\n~    </style>~\n~</resources>~\n~)
 Module1=acTicket
 Module10=cUsers
+Module11=mUtility
 Module2=Starter
 Module3=KeyValueStore
 Module4=cLink
@@ -41,9 +46,9 @@ Module6=cOrgs
 Module7=cLanguage
 Module8=types
 Module9=mReadJSON
-NumberOfFiles=6
+NumberOfFiles=8
 NumberOfLibraries=17
-NumberOfModules=10
+NumberOfModules=11
 Version=9
 @EndOfDesignText@
 #Region  Project Attributes 
@@ -119,7 +124,9 @@ End Sub
 
 
 Sub OKButton_Click
-	kIME.HideKeyboard
+	ServerText.TextField.Enabled=False
+	UsernameText.TextField.Enabled=False
+	PasswordText.TextField.Enabled=False
 	SaveLoginValues
 	
 	gConnection.Initialize

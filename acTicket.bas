@@ -26,6 +26,11 @@ Sub Globals
 	Private VP As AHViewPager
 	Private PC As AHPageContainer
 	Private TabLayout As DSTabLayout
+	Private AddButton As DSFloatingActionButton
+	Private nPage As Int
+	Private NewTicket As CustomLayoutDialog
+	Private TicketStatus As B4XComboBox
+	Private TicketText As B4XFloatTextField
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
@@ -38,7 +43,7 @@ Sub Activity_Create(FirstTime As Boolean)
 	ActionBar.Title=gTicket.title
 	ActionBar.SubTitle=Main.gL.GetString("Status") & ": " & Main.gL.GetString(gTicket.state)
 	pContent.LoadLayout("laypaper")
-
+	pContent.LoadLayout("layaddbutton")
 
 	
 	PC.Initialize
@@ -61,7 +66,9 @@ Sub Activity_Create(FirstTime As Boolean)
 		Dim mArticle As Map
 		lArticles=jP.NextArray
 		Dim n As Int
+		nPage=lArticles.Size-1
 		For n=0 To lArticles.Size-1
+			
 			mArticle=lArticles.Get(n)
 			Log(mArticle.Get("updated_at"))
 			'iDate=xi.Parse( mArticle.Get("updated_at"))
@@ -70,12 +77,13 @@ Sub Activity_Create(FirstTime As Boolean)
 			p.LoadLayout("layweb")
 			Wait For  (ParseBody(mArticle.Get("body"))) complete (sWeb As String)
 			webv.LoadHtml(sWeb)
+			mUtility.DisableButtonZoom(webv)
 			'PC.AddPage(p,DateTime.GetDayOfMonth(iDate) & " " & DateUtils.GetMonthName(iDate) & "(" &  (n+1) & "/" & lArticles.Size & ")")
 			PC.AddPage(p,(n+1) & "/" & lArticles.Size )
 			webv.Height=VP.Height
 			webv.Width=VP.Width
 		Next
-		VP.CurrentPage=0
+		VP.CurrentPage=nPage
 		ProgressDialogHide
 	Else
 		ProgressDialogHide
@@ -133,3 +141,65 @@ Sub webv_OverrideUrl (Url As String) As Boolean
 	Return True
 End Sub
 
+Sub VP_PageChanged (Position As Int)
+	If Position=nPage Then
+		AddButton.Show
+		Else
+		AddButton.Hide
+	End If
+End Sub
+
+Sub AddButton_Click
+	Dim sf As Object = NewTicket.ShowAsync("New Response", "Send", "Cancel", "", Null, True)
+	NewTicket.SetSize(100%x, 350dip)
+	Wait For (sf) Dialog_Ready(pnl As Panel)
+	pnl.LoadLayout("laynewticket")
+	TicketStatus.cmbBox.Add("Status Open")
+	TicketStatus.cmbBox.Add("Status Closed")
+	TicketStatus.SelectedIndex=0
+	NewTicket.GetButton(DialogResponse.POSITIVE).Enabled=False
+	Wait For (sf) Dialog_Result(res As Int)
+	If res=DialogResponse.POSITIVE Then
+		Dim NewArticle As Map
+		NewArticle.Initialize
+'		NewArticle.Put("ticket_id",gTicket.id)
+'		NewArticle.Put("body",TicketText.Text)
+'		NewArticle.Put("type","note")
+'		NewArticle.Put("internal",False)
+'		NewArticle.Put("internal",False)
+'		NewArticle.Put("internal",False)
+'		'NewArticle.Put("time_unit","24")
+'		
+'		
+'		NewArticle.Put("to","")
+'		NewArticle.Put("cc","")
+'		NewArticle.Put("subject","sottetto")
+'		NewArticle.Put("content_type","text/html")
+
+		NewArticle.Put("id",gTicket.id)
+		NewArticle.Put("title",TicketText.Text)
+		Select Case TicketStatus.SelectedIndex
+			Case 0
+				NewArticle.Put("state_id",2)
+			Case 1
+				NewArticle.Put("state_id",4)
+		End Select
+		
+		Dim j As HttpJob
+		j.Initialize("",Me)
+		'Main.gLink.PutArticlesTicket(j,NewArticle)
+		Main.gLink.ModifyTicket(j,gTicket.id,NewArticle)
+		Wait For (j) JobDone(j As HttpJob)
+		If j.Success=True Then
+			Log(j.GetString)
+		End If
+	End If
+End Sub
+
+Sub TicketText_TextChanged (Old As String, New As String)
+	If New.Length>0 Then
+		NewTicket.GetButton(DialogResponse.POSITIVE).Enabled=True
+		Else
+		NewTicket.GetButton(DialogResponse.POSITIVE).Enabled=False
+	End If
+End Sub
