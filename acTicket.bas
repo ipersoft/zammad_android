@@ -159,11 +159,15 @@ Sub AddButton_Click
 	TicketStatus.SelectedIndex=0
 	NewTicket.GetButton(DialogResponse.POSITIVE).Enabled=False
 	Wait For (sf) Dialog_Result(res As Int)
+	TicketText.TextField.Enabled=False
 	If res=DialogResponse.POSITIVE Then
 		Dim NewArticle As Map
+		Dim StatusTicket As Map
 		NewArticle.Initialize
-'		NewArticle.Put("ticket_id",gTicket.id)
-'		NewArticle.Put("body",TicketText.Text)
+		StatusTicket.Initialize
+		
+		NewArticle.Put("ticket_id",gTicket.id)
+		NewArticle.Put("body",TicketText.Text)
 '		NewArticle.Put("type","note")
 '		NewArticle.Put("internal",False)
 '		NewArticle.Put("internal",False)
@@ -176,23 +180,38 @@ Sub AddButton_Click
 '		NewArticle.Put("subject","sottetto")
 '		NewArticle.Put("content_type","text/html")
 
-		NewArticle.Put("id",gTicket.id)
-		NewArticle.Put("title",TicketText.Text)
+		StatusTicket.Put("id",gTicket.id)
 		Select Case TicketStatus.SelectedIndex
 			Case 0
-				NewArticle.Put("state_id",2)
+				StatusTicket.Put("state_id",2)
 			Case 1
-				NewArticle.Put("state_id",4)
+				StatusTicket.Put("state_id",4)
 		End Select
 		
-		Dim j As HttpJob
-		j.Initialize("",Me)
-		'Main.gLink.PutArticlesTicket(j,NewArticle)
-		Main.gLink.ModifyTicket(j,gTicket.id,NewArticle)
+		ProgressDialogShow("Send ...")
+		
+		If gTicket.state_id<>StatusTicket.Get("state_id") Then
+			Dim j As HttpJob
+			j.Initialize("",Me)
+			Main.gLink.ModifyTicket(j,gTicket.id,StatusTicket)
+			Wait For (j) JobDone(j As HttpJob)
+			If j.Success=True Then
+				Log(j.GetString)
+			Else
+				ToastMessageShow("Error modify status ticket",False)
+			End If
+		End If
+		
+		Main.gLink.PutArticlesTicket(j,NewArticle)
 		Wait For (j) JobDone(j As HttpJob)
 		If j.Success=True Then
 			Log(j.GetString)
+		Else
+			ToastMessageShow("Error insert article",False)
 		End If
+		
+		ProgressDialogHide
+		
 	End If
 End Sub
 

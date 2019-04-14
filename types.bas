@@ -13,6 +13,6 @@ Sub Process_Globals
 	Type cLogin(id As Int,organization_id As Int,login As String,firstname As String,lastname As String,active As Boolean,	isAdmin As Boolean, isAgent As Boolean, isCustomer As Boolean,organization As String)
 	Type cOrg (id As Int,	name As String,	active As Boolean)	
 	Type cUser(id As Int,organization_id As Int,firstname As String,lastname As String,active As Boolean)
-	Type cTicket(id As Int,state As String,number As Int, title As String,organization As String)
+	Type cTicket(id As Int,state_id as int,state As String,number As Int, title As String,organization As String)
 	Type cArticle(id As Int,body As String)
 End Sub

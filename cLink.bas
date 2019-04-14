@@ -59,6 +59,7 @@ public Sub PutArticlesTicket(j As HttpJob,NewArticle As Map) As HttpJob
 	js.Initialize(NewArticle)
 	Log(js.ToString)
 	j.PostString(c.URL & "/api/v1/ticket_articles",js.ToString)
+	j.GetRequest.SetContentType("application/json")
 	Return BasicConfig(j)	
 End Sub
 public Sub ModifyTicket(j As HttpJob,ID As Int,NewArticle As Map) As HttpJob
@@ -66,6 +67,7 @@ public Sub ModifyTicket(j As HttpJob,ID As Int,NewArticle As Map) As HttpJob
 	js.Initialize(NewArticle)
 	Log(js.ToString)
 	j.PutString(c.URL & "/api/v1/tickets/" & ID,js.ToString)
+	j.GetRequest.SetContentType("application/json")
 	Return BasicConfig(j)	
 End Sub
 Public Sub GetGenericLink(j As HttpJob,sLink As String) As HttpJob

@@ -85,9 +85,6 @@ Sub Globals
 	'These variables can only be accessed from this module.
 	Dim kC As KeyValueStore
 	Private OKButton As ACButton
-
-	Private kIME As IME
-	
 	Private ActionBar As ACToolBarLight
 	Private pContent As Panel
 	Private ABHelper As ACActionBar
