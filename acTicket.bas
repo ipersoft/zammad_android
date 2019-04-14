@@ -42,6 +42,13 @@ Sub Activity_Create(FirstTime As Boolean)
 	ActionBar.Elevation=0
 	ActionBar.Title=gTicket.title
 	ActionBar.SubTitle=Main.gL.GetString("Status") & ": " & Main.gL.GetString(gTicket.state)
+
+
+	LoadTicket
+	
+End Sub
+Sub LoadTicket
+	pContent.RemoveAllViews
 	pContent.LoadLayout("laypaper")
 	pContent.LoadLayout("layaddbutton")
 
@@ -52,7 +59,6 @@ Sub Activity_Create(FirstTime As Boolean)
 	VP.PageContainer = PC
 	
 	TabLayout.SetViewPager(VP)
-
 	Dim j As HttpJob
 	j.Initialize("",Me)
 	j=Main.gLink.GetArticlesTicket(j,gTicket.id)
@@ -90,9 +96,7 @@ Sub Activity_Create(FirstTime As Boolean)
 		ToastMessageShow("Error",False)
 		Activity.Finish
 	End If
-	
 End Sub
-
 Sub ActionBar_NavigationItemClick
 	Activity.Finish
 End Sub
@@ -189,10 +193,9 @@ Sub AddButton_Click
 		End Select
 		
 		ProgressDialogShow("Send ...")
-		
+		Dim j As HttpJob
+		j.Initialize("",Me)
 		If gTicket.state_id<>StatusTicket.Get("state_id") Then
-			Dim j As HttpJob
-			j.Initialize("",Me)
 			Main.gLink.ModifyTicket(j,gTicket.id,StatusTicket)
 			Wait For (j) JobDone(j As HttpJob)
 			If j.Success=True Then
@@ -210,7 +213,10 @@ Sub AddButton_Click
 			ToastMessageShow("Error insert article",False)
 		End If
 		
+		j.Release
 		ProgressDialogHide
+		
+		LoadTicket
 		
 	End If
 End Sub
