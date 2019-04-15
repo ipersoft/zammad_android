@@ -76,7 +76,9 @@ Sub LoadTicket
 		For n=0 To lArticles.Size-1
 			
 			mArticle=lArticles.Get(n)
-			Log(mArticle.Get("updated_at"))
+			Dim sDateTime As String
+			sDateTime=mArticle.Get("updated_at")
+
 			'iDate=xi.Parse( mArticle.Get("updated_at"))
 			Dim p As Panel
 			p.Initialize("")
@@ -85,7 +87,13 @@ Sub LoadTicket
 			webv.LoadHtml(sWeb)
 			mUtility.DisableButtonZoom(webv)
 			'PC.AddPage(p,DateTime.GetDayOfMonth(iDate) & " " & DateUtils.GetMonthName(iDate) & "(" &  (n+1) & "/" & lArticles.Size & ")")
-			PC.AddPage(p,(n+1) & "/" & lArticles.Size )
+			Dim sPage As CSBuilder
+			sPage.Initialize
+			sPage.Append(sDateTime.SubString2(0,10)).PopAll
+			'sPage.Append(sDateTime.SubString2(11,8)).PopAll
+			'sPage.Size(10).Append("(" & (n+1) & "/" & lArticles.Size & ")").PopAll
+			Log(sPage.ToString)
+			PC.AddPage(p,sPage.ToString)
 			webv.Height=VP.Height
 			webv.Width=VP.Width
 		Next
