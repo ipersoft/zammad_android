@@ -23,9 +23,6 @@ Sub Globals
 	Private pContent As Panel
 	Private ABHelper As ACActionBar
 	Private webv As WebView
-	Private VP As AHViewPager
-	Private PC As AHPageContainer
-	Private TabLayout As DSTabLayout
 	Private AddButton As DSFloatingActionButton
 	Private nPage As Int
 	Private NewTicket As CustomLayoutDialog
@@ -49,22 +46,25 @@ Sub Activity_Create(FirstTime As Boolean)
 End Sub
 Sub LoadTicket
 	pContent.RemoveAllViews
-	pContent.LoadLayout("laypaper")
+	pContent.LoadLayout("layweb")
 	pContent.LoadLayout("layaddbutton")
-
-	
-	PC.Initialize
-	Dim ac As AppCompat
-	TabLayout.Color = ac.GetThemeAttribute("colorPrimary")
-	VP.PageContainer = PC
-	
-	TabLayout.SetViewPager(VP)
+	mUtility.DisableButtonZoom(webv)
 	Dim j As HttpJob
 	j.Initialize("",Me)
 	j=Main.gLink.GetArticlesTicket(j,gTicket.id)
+	
+	Dim sStyle As String
+	Dim sArticle As String
+	If File.Exists(File.DirAssets,"style.txt")=True Then
+		sStyle=File.ReadString(File.DirAssets,"style.txt")
+	End If
+	If File.Exists(File.DirAssets,"article.txt")=True Then
+		sArticle=File.ReadString(File.DirAssets,"article.txt")
+	End If
+	
+	
 	ProgressDialogShow(Main.gL.GetString("Loading ticket") & " ...")
 	Wait For (j) JobDone(j As HttpJob)
-	
 	If j.Success=True Then
 		Dim jP As JSONParser
 		jP.Initialize(j.GetString)
@@ -73,33 +73,25 @@ Sub LoadTicket
 		lArticles=jP.NextArray
 		Dim n As Int
 		nPage=lArticles.Size-1
+		Dim sWebTicket As StringBuilder
+		sWebTicket.Initialize
+		sWebTicket.Append(sStyle)
+		sWebTicket.Append("<p><h1>").Append(gTicket.title).Append("</h1></p>")
+		sWebTicket.Append("<p></p>")
 		For n=0 To lArticles.Size-1
-			
 			mArticle=lArticles.Get(n)
 			Dim sDateTime As String
 			sDateTime=mArticle.Get("updated_at")
-
-			'iDate=xi.Parse( mArticle.Get("updated_at"))
-			Dim p As Panel
-			p.Initialize("")
-			p.LoadLayout("layweb")
 			Wait For  (ParseBody(mArticle.Get("body"))) complete (sWeb As String)
-			webv.LoadHtml(sWeb)
-			mUtility.DisableButtonZoom(webv)
-			'PC.AddPage(p,DateTime.GetDayOfMonth(iDate) & " " & DateUtils.GetMonthName(iDate) & "(" &  (n+1) & "/" & lArticles.Size & ")")
-			Dim sPage As CSBuilder
-			sPage.Initialize
-			sPage.Append(sDateTime.SubString2(0,10)).PopAll
-			'sPage.Append(sDateTime.SubString2(11,8)).PopAll
-			'sPage.Size(10).Append("(" & (n+1) & "/" & lArticles.Size & ")").PopAll
-			Log(sPage.ToString)
-			PC.AddPage(p,sPage.ToString)
-			webv.Height=VP.Height
-			webv.Width=VP.Width
+			Dim putString As String
+			putString=sArticle	
+			putString=putString.Replace("#body#",sWeb)
+			putString=putString.Replace("#from#",mArticle.Get("from"))
+			sWebTicket.Append(putString)
 		Next
-		VP.CurrentPage=nPage
 		ProgressDialogHide
-	Else
+		webv.LoadHtml(sWebTicket.ToString)
+		Else
 		ProgressDialogHide
 		ToastMessageShow("Error",False)
 		Activity.Finish
@@ -180,17 +172,6 @@ Sub AddButton_Click
 		
 		NewArticle.Put("ticket_id",gTicket.id)
 		NewArticle.Put("body",TicketText.Text)
-'		NewArticle.Put("type","note")
-'		NewArticle.Put("internal",False)
-'		NewArticle.Put("internal",False)
-'		NewArticle.Put("internal",False)
-'		'NewArticle.Put("time_unit","24")
-'		
-'		
-'		NewArticle.Put("to","")
-'		NewArticle.Put("cc","")
-'		NewArticle.Put("subject","sottetto")
-'		NewArticle.Put("content_type","text/html")
 
 		StatusTicket.Put("id",gTicket.id)
 		Select Case TicketStatus.SelectedIndex

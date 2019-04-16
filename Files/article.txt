@@ -1,0 +1,9 @@
+<table class="roundedCorners">
+  <tr>
+    <th>#from#</th>
+  </tr>
+  <tr>
+    <td>#body#</td>
+  </tr>
+</table>
+<p></p>
