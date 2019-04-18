@@ -1,14 +1,20 @@
 ﻿Build1=Default,it.ipersoft.zammad
-File1=article.txt
-File2=header.jpg
-File3=layaddbutton.bal
-File4=layclv.bal
-File5=layhome.bal
-File6=laynewticket.bal
-File7=LayoutLogin.bal
-File8=layweb.bal
-File9=style.txt
+File1=Agent.html
+File10=layweb.bal
+File11=style.css
+File12=System.html
+File2=Customer.html
+File3=hamburger.png
+File4=header.jpg
+File5=layaddbutton.bal
+File6=layclv.bal
+File7=layhome.bal
+File8=laynewticket.bal
+File9=LayoutLogin.bal
 FileGroup1=Default Group
+FileGroup10=Default Group
+FileGroup11=Default Group
+FileGroup12=Default Group
 FileGroup2=Default Group
 FileGroup3=Default Group
 FileGroup4=Default Group
@@ -47,7 +53,7 @@ Module6=cOrgs
 Module7=cLanguage
 Module8=types
 Module9=mReadJSON
-NumberOfFiles=9
+NumberOfFiles=12
 NumberOfLibraries=16
 NumberOfModules=11
 Version=9
@@ -97,6 +103,7 @@ Sub Globals
 	Private PasswordText As B4XFloatTextField
 	Private UsernameText As B4XFloatTextField
 	Private ServerText As B4XFloatTextField
+
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
@@ -173,6 +180,7 @@ Sub SaveLoginValues
 	kC.Put("LOGIN",UsernameText.Text)
 	kC.Put("SERVER",ServerText.Text)
 End Sub
+
 Sub GenMenu
 	Activity.RemoveAllViews
 	Activity.LoadLayout("layhome")
@@ -204,11 +212,15 @@ Sub GenMenu
 		MDB.AddPrimaryDrawerItem("My Ticket",Null,Null,"",True,20,"")
 	End If
 	If gLogin.isCustomer Or gLogin.isAgent Then
-		MDB.AddPrimaryDrawerItem("Agent Ticket New",Null,Null,"",True,30,"")
+		MDB.AddPrimaryDrawerItem("Agent new tickets",Null,Null,"",True,30,"")
 	End If
 	If gLogin.isCustomer Or gLogin.isAgent Then
-		MDB.AddPrimaryDrawerItem("Agent Ticket Open",Null,Null,"",True,40,"")
+		MDB.AddPrimaryDrawerItem("Agent open tickets",Null,Null,"",True,40,"")
 	End If
+	If gLogin.isCustomer Or gLogin.isAgent Then
+		MDB.AddPrimaryDrawerItem("Unassigned tickets",Null,Null,"",True,50,"")
+	End If
+	
 '	If gLogin.isAdmin Or gLogin.isAgent Or gLogin.isCustomer  Then
 '		MDB.AddPrimaryDrawerItem("Notifiche",Null,Null,"",True,10,"")
 '	End If
@@ -291,18 +303,30 @@ Sub ActionBar_MenuItemClick (Item As ACMenuItem)
 	
 End Sub
 Sub MD_ItemClick(Position As Int, Identifier As Int)
-	
+	ActionBar.Menu.Clear
 	Select Case Identifier
 		Case 20
 			ActionBar.SubTitle="My ticket"
 			SetMenuCustomer
 			GetListTicket(True,"",False)
 		Case 30
-			ActionBar.SubTitle="Agent Ticket New"
-			GetListTicket(False,"new",True)
+			ActionBar.SubTitle="Agent new tickets"
+			Dim j As HttpJob
+			j.Initialize("",Me)
+			j=gLink.GetTicketAgentStatus(j,"new")
+			LoadTicket(j,True)
 		Case 40
-			ActionBar.SubTitle="Agent Ticket Old"
-			GetListTicket(False,"open",True)
+			ActionBar.SubTitle="Agent open tickets"
+			Dim j As HttpJob
+			j.Initialize("",Me)
+			j=gLink.GetTicketAgentStatus(j,"open")
+			LoadTicket(j,True)
+		Case 50
+			ActionBar.SubTitle="Unassigned tickets"
+			Dim j As HttpJob
+			j.Initialize("",Me)
+			j=gLink.GetTicketUnassigned(j)
+			LoadTicket(j,True)
 	End Select
 End Sub
 Sub SetMenuCustomer
@@ -326,9 +350,8 @@ Sub SetMenuCustomer
 	
 End Sub
 Sub GetListTicket(Customer As Boolean,Status As String,OrgVisible As Boolean)
-	pContent.RemoveAllViews
-	pContent.LoadLayout("layclv")
-	Dim cText As CSBuilder
+
+	
 	Dim j As HttpJob
 	j.Initialize("",Me)
 	If Customer Then
@@ -340,6 +363,13 @@ Sub GetListTicket(Customer As Boolean,Status As String,OrgVisible As Boolean)
 		Else
 		j=gLink.GetTicketAgentStatus(j,Status)
 	End If
+	
+	LoadTicket(j,OrgVisible)
+End Sub
+Sub LoadTicket(j As HttpJob,OrgVisible As Boolean)
+	pContent.RemoveAllViews
+	pContent.LoadLayout("layclv")
+	Dim cText As CSBuilder
 	ProgressDialogShow(gL.GetString("Loading ticket") & " ...")
 	Wait For (j) JobDone(j As HttpJob)
 	ProgressDialogHide
@@ -364,7 +394,6 @@ Sub GetListTicket(Customer As Boolean,Status As String,OrgVisible As Boolean)
 	End If
 	j.Release
 End Sub
-
 'Sub ListOrgs
 '	pContent.RemoveAllViews
 '	pContent.LoadLayout("layclv")

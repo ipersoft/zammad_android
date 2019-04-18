@@ -55,13 +55,10 @@ Sub LoadTicket
 	
 	Dim sStyle As String
 	Dim sArticle As String
-	If File.Exists(File.DirAssets,"style.txt")=True Then
-		sStyle=File.ReadString(File.DirAssets,"style.txt")
+	If File.Exists(File.DirAssets,"style.css")=True Then
+		sStyle=File.ReadString(File.DirAssets,"style.css")
 	End If
-	If File.Exists(File.DirAssets,"article.txt")=True Then
-		sArticle=File.ReadString(File.DirAssets,"article.txt")
-	End If
-	
+
 	
 	ProgressDialogShow(Main.gL.GetString("Loading ticket") & " ...")
 	Wait For (j) JobDone(j As HttpJob)
@@ -84,10 +81,14 @@ Sub LoadTicket
 			sDateTime=mArticle.Get("updated_at")
 			Wait For  (ParseBody(mArticle.Get("body"))) complete (sWeb As String)
 			Dim putString As String
-			putString=sArticle	
-			putString=putString.Replace("#body#",sWeb)
-			putString=putString.Replace("#from#",mArticle.Get("from"))
-			sWebTicket.Append(putString)
+			Dim sSender As String=mArticle.Get("sender")
+			sSender=sSender.ToLowerCase
+			If File.Exists(File.DirAssets,sSender & ".html")=True Then
+				putString=File.ReadString(File.DirAssets,sSender & ".html")
+				putString=putString.Replace("#body#",sWeb)
+				putString=putString.Replace("#from#",mArticle.Get("from"))
+				sWebTicket.Append(putString)
+			End If
 		Next
 		ProgressDialogHide
 		webv.LoadHtml(sWebTicket.ToString)

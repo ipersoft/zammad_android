@@ -1,0 +1,16 @@
+<style>table{
+	width: 100%;
+}
+table.roundedCorners {
+	border: 1px solid DarkOrange;
+	border-radius: 13px;
+	border-spacing: 0;
+}
+table.roundedCorners td,table.roundedCorners th {
+	border-bottom: 1px solid DarkOrange;
+	padding: 10px;
+}
+table.roundedCorners tr:last-child > td {
+	border-bottom: none;
+}
+</style>
