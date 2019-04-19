@@ -1,20 +1,22 @@
 ﻿Build1=Default,it.ipersoft.zammad
 File1=Agent.html
 File10=layweb.bal
-File11=style.css
-File12=System.html
+File11=prefsscreen.bal
+File12=style.css
+File13=System.html
 File2=Customer.html
-File3=hamburger.png
-File4=header.jpg
-File5=layaddbutton.bal
-File6=layclv.bal
-File7=layhome.bal
-File8=laynewticket.bal
-File9=LayoutLogin.bal
+File3=header.jpg
+File4=layaddbutton.bal
+File5=layclv.bal
+File6=layhome.bal
+File7=laynewticket.bal
+File8=LayoutLogin.bal
+File9=laypref.bal
 FileGroup1=Default Group
 FileGroup10=Default Group
 FileGroup11=Default Group
 FileGroup12=Default Group
+FileGroup13=Default Group
 FileGroup2=Default Group
 FileGroup3=Default Group
 FileGroup4=Default Group
@@ -33,6 +35,8 @@ Library13=ahlocale
 Library14=dialogs
 Library15=xui views
 Library16=reflection
+Library17=xmllayoutbuilder
+Library18=preferences
 Library2=sql
 Library3=b4xencryption
 Library4=randomaccessfile
@@ -45,6 +49,7 @@ ManifestCode='This code will be applied to the manifest file during compilation.
 Module1=acTicket
 Module10=cUsers
 Module11=mUtility
+Module12=acPref
 Module2=Starter
 Module3=KeyValueStore
 Module4=cLink
@@ -53,9 +58,9 @@ Module6=cOrgs
 Module7=cLanguage
 Module8=types
 Module9=mReadJSON
-NumberOfFiles=12
-NumberOfLibraries=16
-NumberOfModules=11
+NumberOfFiles=13
+NumberOfLibraries=18
+NumberOfModules=12
 Version=9
 @EndOfDesignText@
 #Region  Project Attributes 
@@ -91,7 +96,6 @@ Sub Globals
 	'These global variables will be redeclared each time the activity is created.
 	'These variables can only be accessed from this module.
 	Dim kC As KeyValueStore
-	Private OKButton As ACButton
 	Private ActionBar As ACToolBarLight
 	Private pContent As Panel
 	Private ABHelper As ACActionBar
@@ -104,6 +108,7 @@ Sub Globals
 	Private UsernameText As B4XFloatTextField
 	Private ServerText As B4XFloatTextField
 
+	Private OKButton As SwiftButton
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
@@ -175,10 +180,16 @@ End Sub
 Sub LoadLoginValues
 	UsernameText.Text=kC.GetDefault("LOGIN","")
 	ServerText.Text=kC.GetDefault("SERVER","")
+	If kC.GetDefault("SavePassword",False)=True Then
+		PasswordText.Text=kC.GetDefault("PASSWORD","")
+	End If
 End Sub
 Sub SaveLoginValues
 	kC.Put("LOGIN",UsernameText.Text)
 	kC.Put("SERVER",ServerText.Text)
+	If kC.GetDefault("SavePassword",False)=True Then
+		kC.Put("PASSWORD",PasswordText.Text)
+	End If
 End Sub
 
 Sub GenMenu
@@ -467,4 +478,8 @@ Sub clv_ItemClick (Index As Int, Value As Object)
 		acTicket.gTicket=gTicket
 		StartActivity(acTicket)
 	End If
+End Sub
+
+Sub SettingButton_Click
+	StartActivity(acPref)
 End Sub

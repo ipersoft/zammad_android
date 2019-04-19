@@ -36,7 +36,6 @@ Sub Activity_Create(FirstTime As Boolean)
 	ABHelper.Initialize
 	ABHelper.ShowUpIndicator = True
 	ActionBar.InitMenuListener
-	ActionBar.Elevation=0
 	ActionBar.Title=gTicket.title
 	ActionBar.SubTitle=Main.gL.GetString("Status") & ": " & Main.gL.GetString(gTicket.state)
 
