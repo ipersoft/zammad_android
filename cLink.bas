@@ -6,7 +6,7 @@ Version=9
 @EndOfDesignText@
 Sub Class_Globals
 	Public c As cConnection	
-	Public m As cMy
+
 	Public l As cLogin
 End Sub
 
@@ -17,7 +17,7 @@ End Sub
 private Sub BasicConfig(j As HttpJob) As HttpJob
 	j.Username=c.Username
 	j.Password=c.Password
-	j.GetRequest.SetHeader("User-Agent",m.UserAgent)
+	'j.GetRequest.SetHeader("User-Agent",m.UserAgent)
 	Return j
 End Sub
 public Sub GetUser(j As HttpJob)	As HttpJob
@@ -80,5 +80,9 @@ public Sub GetTicketAgentStatus(j As HttpJob,status As String) As HttpJob
 End Sub
 public Sub GetTicketUnassigned(j As HttpJob) As HttpJob
 	j.Download(c.URL & "/api/v1/tickets/search?query=owner_id:1 AND state:(open OR new)&expand=true&sort_by=created_at&order_by=asc")
+	Return BasicConfig(j)
+End Sub
+public Sub GetTicketSingle(j As HttpJob,ID As Int) As HttpJob
+	j.Download(c.URL & "/api/v1/tickets/search?query=id:"  & ID & "&expand=true")
 	Return BasicConfig(j)
 End Sub

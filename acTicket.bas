@@ -36,14 +36,38 @@ Sub Activity_Create(FirstTime As Boolean)
 	ABHelper.Initialize
 	ABHelper.ShowUpIndicator = True
 	ActionBar.InitMenuListener
-	ActionBar.Title=gTicket.title
-	ActionBar.SubTitle=Main.gL.GetString("Status") & ": " & Main.gL.GetString(gTicket.state)
 
+	ActionBar.Menu.Clear
+'	Dim item As ACMenuItem
+'	ActionBar.Menu.add(1,1,"Change title",Null).ShowAsAction=item.SHOW_AS_ACTION_NEVER
 
-	LoadTicket
+	Wait For (LoadTicket) Complete (Success As Boolean)
+	
+	'LoadArticlest
 	
 End Sub
-Sub LoadTicket
+Sub LoadTicket As ResumableSub
+	Try
+		
+		ProgressDialogShow(Main.gL.Translate("Read ticket in progress") & " ...")
+	
+		Wait For (Main.gI.GetTicket(gTicket.id)) Complete (resTicket As cTicket)
+	
+		ActionBar.Title=resTicket.title
+		ActionBar.SubTitle=Main.gL.Translate("Status") & ": " & Main.gL.Translate(resTicket.state)
+	
+		ProgressDialogHide
+		Return True
+	Catch		
+		Log(LastException)
+		Return False
+	End Try
+
+End Sub
+Sub ActionBar_MenuItemClick (Item As ACMenuItem)
+	
+End Sub
+Sub LoadArticlest
 	pContent.RemoveAllViews
 	pContent.LoadLayout("layweb")
 	pContent.LoadLayout("layaddbutton")
@@ -59,7 +83,7 @@ Sub LoadTicket
 	End If
 
 	
-	ProgressDialogShow(Main.gL.GetString("Loading ticket") & " ...")
+	ProgressDialogShow(Main.gL.Translate("Loading ticket") & " ...")
 	Wait For (j) JobDone(j As HttpJob)
 	If j.Success=True Then
 		Dim jP As JSONParser
@@ -100,9 +124,7 @@ End Sub
 Sub ActionBar_NavigationItemClick
 	Activity.Finish
 End Sub
-Sub ActionBar_MenuItemClick (Item As ACMenuItem)
-	Msgbox(Item.Title,"")
-End Sub
+
 Sub Activity_Resume
 
 End Sub
@@ -205,7 +227,7 @@ Sub AddButton_Click
 		j.Release
 		ProgressDialogHide
 		
-		LoadTicket
+		LoadArticlest
 		
 	End If
 End Sub

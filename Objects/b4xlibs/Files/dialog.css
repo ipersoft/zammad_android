@@ -16,8 +16,13 @@
 
 .b4xdialog .scroll-bar:horizontal .thumb,
 .b4xdialog .scroll-bar:vertical .thumb {
-    -fx-background-color: #4B4B4B;
+   -fx-background-color: #4B4B4B; 
     -fx-background-radius: 5em;
+}
+
+.b4xdialoglight .scroll-bar:horizontal .thumb,
+.b4xdialoglight .scroll-bar:vertical .thumb {
+   -fx-background-color: #B8B8B8; 
 }
 
 .scroll-pane{

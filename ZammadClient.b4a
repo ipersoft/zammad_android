@@ -1,22 +1,24 @@
 ﻿Build1=Default,it.ipersoft.zammad
 File1=Agent.html
-File10=layweb.bal
-File11=prefsscreen.bal
-File12=style.css
-File13=System.html
+File10=laypref.bal
+File11=layweb.bal
+File12=prefsscreen.bal
+File13=style.css
+File14=System.html
 File2=Customer.html
 File3=header.jpg
 File4=layaddbutton.bal
 File5=layclv.bal
 File6=layhome.bal
-File7=laynewticket.bal
-File8=LayoutLogin.bal
-File9=laypref.bal
+File7=laylogin.bal
+File8=laynewticket.bal
+File9=LayoutLogin.bal
 FileGroup1=Default Group
 FileGroup10=Default Group
 FileGroup11=Default Group
 FileGroup12=Default Group
 FileGroup13=Default Group
+FileGroup14=Default Group
 FileGroup2=Default Group
 FileGroup3=Default Group
 FileGroup4=Default Group
@@ -49,19 +51,19 @@ ManifestCode='This code will be applied to the manifest file during compilation.
 Module1=acTicket
 Module10=cUsers
 Module11=mUtility
-Module12=acPref
-Module2=Starter
-Module3=KeyValueStore
-Module4=cLink
-Module5=cMy
+Module12=cInterface
+Module2=acPref
+Module3=Starter
+Module4=KeyValueStore
+Module5=cLink
 Module6=cOrgs
 Module7=cLanguage
 Module8=types
 Module9=mReadJSON
-NumberOfFiles=13
+NumberOfFiles=14
 NumberOfLibraries=18
 NumberOfModules=12
-Version=9
+Version=9.01
 @EndOfDesignText@
 #Region  Project Attributes 
 	#ApplicationLabel: Zammad Client
@@ -86,10 +88,11 @@ Sub Process_Globals
 	Public gLogin As cLogin
 	Public gConnection As cConnection
 	Public gLink As cLink
-	Public gMy As cMy
 	Public gOrgs As cOrgs
 	Public gUsers As cUsers
+
 	Public gL As cLanguage
+	Public gI As cInterface
 End Sub
 
 Sub Globals
@@ -107,33 +110,56 @@ Sub Globals
 	Private PasswordText As B4XFloatTextField
 	Private UsernameText As B4XFloatTextField
 	Private ServerText As B4XFloatTextField
+	Private FormLogin As CustomLayoutDialog
+
 
 	Private OKButton As SwiftButton
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
 	'Do not forget to load the layout file created with the visual designer. For example:
-	gMy.Initialize
 	gL.Initialize
-	gL.LANGUAGE=gL.LANGUAGE_ITA
+	gL.LANGUAGE="ITA"
 	
 	kC=Starter.kConfig
-	Activity.LoadLayout("LayoutLogin")
+	gI.Initialize
+	MenuLogin
+	DialogLogin	
+End Sub
+Sub MenuLogin
+	Activity.RemoveAllViews
+	Activity.LoadLayout("layhome")
+	ActionBar.Title=gI.AppName
+	ActionBar.InitMenuListener
+	MDB.Initialize("MD")
+	Dim msa As MSAccountHeaderBuilder
+	msa.Initialize("MSA")
+	Dim HeaderBackground As BitmapDrawable
+	HeaderBackground.Initialize(LoadBitmap(File.DirAssets,"header.jpg"))
+	msa.withHeaderBackground(HeaderBackground)
+	MDB.Initialize("MD")
+	MDB.withAccountHeader(msa.build)
+	MDB.withToolbar(ActionBar)
+	MDB.withActionbarToggle(True)
+	MDB.withActionbarToggleAnimated(True)
+	MDB.withDisplayBelowToolbar(False)
+	MDB.AddPrimaryDrawerItem("Login",Null,Null,"",True,999,"")
+	MD = MDB.Build
+End Sub
+Sub DialogLogin
+	Dim sf As Object = FormLogin.ShowAsync(gL.Translate("Login Form"), "Login", "", "", Null, True)
+	FormLogin.SetSize(100%x, 350dip)
+	Wait For (sf) Dialog_Ready(pnl As Panel)
+	pnl.LoadLayout("laylogin")
 	LoadLoginValues
 	Dim et As EditText = PasswordText.TextField
 	et.InputType=Bit.Or(et.InputType, 0x00000080)
-End Sub
 
-Sub Activity_Resume
-
-End Sub
-
-Sub Activity_Pause (UserClosed As Boolean)
-
-End Sub
-
-
-Sub OKButton_Click
+	'FormLogin.GetButton(DialogResponse.POSITIVE).Enabled=False
+	Wait For (sf) Dialog_Result(res As Int)
+	If res=DialogResponse.CANCEL Then
+		Return
+	End If
 	ServerText.TextField.Enabled=False
 	UsernameText.TextField.Enabled=False
 	PasswordText.TextField.Enabled=False
@@ -144,39 +170,29 @@ Sub OKButton_Click
 	gConnection.Username=UsernameText.Text
 	gConnection.Password=PasswordText.Text
 	
-	gLink.Initialize
-	gLink.c=gConnection
-	gLink.m=gMy
 	
+	gI.gCon=gConnection
+	ProgressDialogShow(gL.Translate("Connection in progress") & " ...")
 	
-	ProgressDialogShow(gL.GetString("Connection in progress") & " ...")
-	Wait For (Login) Complete (Success As Boolean)	
+	Wait For (gI.Connect) Complete (Success As Boolean)
+	
 	ProgressDialogHide
+	
 	If Success=False Then
-		Msgbox("Authentication failed","")
-	End If
-'	If Success=True Then
-'		ProgressDialogShow(gL.LoadingOrganizations)
-'		Wait For (LoadOrgs) Complete (Success As Boolean)
-'		ProgressDialogHide
-'		If Success=False Then
-'			Msgbox(LastException,"")
-'		End If
-'	End If
-'	If Success=True Then
-'		ProgressDialogShow(gL.LoadingUsers)
-'		Wait For (LoadUsers) Complete (Success As Boolean)
-'		ProgressDialogHide
-'		If Success=False Then
-'			Msgbox(LastException,"")
-'		End If
-'	End If
-	If Success=True Then
-		gLink.l=gLogin
+		DialogLogin
+	Else
 		GenMenu
-		'ListNotifications
 	End If
 End Sub
+Sub Activity_Resume
+
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+
+End Sub
+
+
 Sub LoadLoginValues
 	UsernameText.Text=kC.GetDefault("LOGIN","")
 	ServerText.Text=kC.GetDefault("SERVER","")
@@ -195,12 +211,12 @@ End Sub
 Sub GenMenu
 	Activity.RemoveAllViews
 	Activity.LoadLayout("layhome")
-	ActionBar.Title="Zammad Android"
+	ActionBar.Title=gI.AppName
 	ActionBar.InitMenuListener
 	
 	Dim MSP As MSProfile
 	'    Dim PDB1 As BitmapDrawable : PDB1.Initialize(LoadBitmap(File.DirAssets,"profile2.jpg"))
-	MSP.withName(gLogin.firstname & " " & gLogin.lastname).withEmail(gLogin.organization)
+	MSP.withName(gI.gLogin.firstname & " " & gI.gLogin.lastname).withEmail(gI.gLogin.organization)
 	Dim msa As MSAccountHeaderBuilder
 	msa.Initialize("MSA")
 	Dim Profiles(1) As MSProfile
@@ -218,126 +234,71 @@ Sub GenMenu
 	MDB.withActionbarToggle(True)
 	MDB.withActionbarToggleAnimated(True)
 	MDB.withDisplayBelowToolbar(False)
-	'MDB.AddPrimaryDrawerItem(gL.GetString("Notifications"),Null,Null,"",True,10,"")
-	If gLogin.isCustomer Or gLogin.isAgent Then
-		MDB.AddPrimaryDrawerItem("My Ticket",Null,Null,"",True,20,"")
-	End If
-	If gLogin.isCustomer Or gLogin.isAgent Then
-		MDB.AddPrimaryDrawerItem("Agent new tickets",Null,Null,"",True,30,"")
-	End If
-	If gLogin.isCustomer Or gLogin.isAgent Then
-		MDB.AddPrimaryDrawerItem("Agent open tickets",Null,Null,"",True,40,"")
-	End If
-	If gLogin.isCustomer Or gLogin.isAgent Then
+'	If gI.gLogin.isCustomer Or gI.gLogin.isAgent Then
+'		MDB.AddPrimaryDrawerItem("My Ticket",Null,Null,"",True,20,"")
+'	End If
+'	If gI.gLogin.isCustomer Or gI.gLogin.isAgent Then
+'		MDB.AddPrimaryDrawerItem("Agent new tickets",Null,Null,"",True,30,"")
+'	End If
+'	If gI.gLogin.isCustomer Or gI.gLogin.isAgent Then
+'		MDB.AddPrimaryDrawerItem("Agent open tickets",Null,Null,"",True,40,"")
+'	End If
+	If gI.gLogin.isCustomer Or gI.gLogin.isAgent Then
 		MDB.AddPrimaryDrawerItem("Unassigned tickets",Null,Null,"",True,50,"")
 	End If
-	
-'	If gLogin.isAdmin Or gLogin.isAgent Or gLogin.isCustomer  Then
-'		MDB.AddPrimaryDrawerItem("Notifiche",Null,Null,"",True,10,"")
-'	End If
-'	If gLogin.isAdmin Or gLogin.isAgent Then
-'		MDB.AddPrimaryDrawerItem("Aziende",Null,Null,"",True,20,"")
-'	End If
-'	If gLogin.isAdmin Or gLogin.isAgent Then
-'		MDB.AddPrimaryDrawerItem("Utenti",Null,Null,"",True,30,"")
-'	End If
-	
+	MDB.AddDividerItem
+	MDB.AddSecondaryDrawerItem("Log Out",Null,Null,"",True,998)
 	MD = MDB.Build
 	Sleep(300)
-	If gLogin.isCustomer Or gLogin.isAgent Then
-		MD_ItemClick(1, 20)
-	End If
+'	If gI.gLogin.isCustomer Or gI.gLogin.isAgent Then
+'		MD_ItemClick(1, 20)
+'	End If
 	
 End Sub
-Sub Login As ResumableSub
-	Dim j As HttpJob
-	Dim sJson As String
-	
-	j.Initialize("",Me)
-	j=gLink.GetUser(j)
-	
-	Wait For (j) JobDone(j As HttpJob)
-	If j.Success=False Then
-		Return False
-		j.Release
-	Else
-		sJson=j.GetString
-		j.Release
-		gLogin=mReadJSON.JSONLogin(sJson)
-		Return gLogin<>Null
-	End If	
-End Sub
-'Sub LoadOrgs As ResumableSub
-'	Dim j As HttpJob
-'	Dim sJson As String
-'	
-'	j.Initialize("",Me)
-'	j=gLink.GetOrgs(j)
-'	
-'	Wait For (j) JobDone(j As HttpJob)
-'	If j.Success=False Then
-'		Return False
-'		j.Release
-'	Else
-'		sJson=j.GetString
-'		j.Release
-'		gOrgs.Initialize
-'		Return gOrgs.LoadJson(sJson)
-'	End If
-'End Sub
-'Sub LoadUsers As ResumableSub
-'	Dim j As HttpJob
-'	Dim sJson As String
-'	
-'	j.Initialize("",Me)
-'	j=gLink.GetUsers(j)
-'	
-'	Wait For (j) JobDone(j As HttpJob)
-'	If j.Success=False Then
-'		Return False
-'		j.Release
-'	Else
-'		sJson=j.GetString
-'		j.Release
-'		gUsers.Initialize
-'		Return gUsers.LoadJson(sJson)
-'	End If
-'End Sub
+
 Sub ActionBar_MenuItemClick (Item As ACMenuItem)
-	If Item.Checkable Then
-		Item.Checked=Not(Item.Checked)
-		Select Case MD.Selection
-			Case  MD.getPositionFromIdentifier(20)
-			GetListTicket(True,"",False)
-		End Select
-	End If
+'	If Item.Checkable Then
+'		Item.Checked=Not(Item.Checked)
+'		Select Case MD.Selection
+'			Case  MD.getPositionFromIdentifier(20)
+'			GetListTicket(True,"",False)
+'		End Select
+'	End If
 	
 End Sub
 Sub MD_ItemClick(Position As Int, Identifier As Int)
 	ActionBar.Menu.Clear
 	Select Case Identifier
-		Case 20
-			ActionBar.SubTitle="My ticket"
-			SetMenuCustomer
-			GetListTicket(True,"",False)
-		Case 30
-			ActionBar.SubTitle="Agent new tickets"
-			Dim j As HttpJob
-			j.Initialize("",Me)
-			j=gLink.GetTicketAgentStatus(j,"new")
-			LoadTicket(j,True)
-		Case 40
-			ActionBar.SubTitle="Agent open tickets"
-			Dim j As HttpJob
-			j.Initialize("",Me)
-			j=gLink.GetTicketAgentStatus(j,"open")
-			LoadTicket(j,True)
+'		Case 20
+'			ActionBar.SubTitle="My ticket"
+'			SetMenuCustomer
+'			GetListTicket(True,"",False)
+'		Case 30
+'			ActionBar.SubTitle="Agent new tickets"
+'			Dim j As HttpJob
+'			j.Initialize("",Me)
+'			j=gLink.GetTicketAgentStatus(j,"new")
+'			LoadTicket(j,True)
+'		Case 40
+'			ActionBar.SubTitle="Agent open tickets"
+'			Dim j As HttpJob
+'			j.Initialize("",Me)
+'			j=gLink.GetTicketAgentStatus(j,"open")
+'			LoadTicket(j,True)
 		Case 50
 			ActionBar.SubTitle="Unassigned tickets"
-			Dim j As HttpJob
-			j.Initialize("",Me)
-			j=gLink.GetTicketUnassigned(j)
-			LoadTicket(j,True)
+			ProgressDialogShow(gL.Translate("Loading tickets in progress") & " ...")
+	
+			Wait For (gI.GetTicketsUnassigned) Complete (listTicket As List)
+	
+			ProgressDialogHide
+			
+			LoadTickets(listTicket,True)
+		Case 998
+			MenuLogin
+			DialogLogin
+		Case 999
+			DialogLogin
 	End Select
 End Sub
 Sub SetMenuCustomer
@@ -360,116 +321,47 @@ Sub SetMenuCustomer
 	End Try
 	
 End Sub
-Sub GetListTicket(Customer As Boolean,Status As String,OrgVisible As Boolean)
-
-	
-	Dim j As HttpJob
-	j.Initialize("",Me)
-	If Customer Then
-		Dim sO As ACMenuItem
-		Dim sC As ACMenuItem
-		sO=ActionBar.Menu.FindItem(2)
-		sC=ActionBar.Menu.FindItem(3)
-		j=gLink.GetTicketCustomer(j,sO.Checked,sC.Checked)
-		Else
-		j=gLink.GetTicketAgentStatus(j,Status)
-	End If
-	
-	LoadTicket(j,OrgVisible)
-End Sub
-Sub LoadTicket(j As HttpJob,OrgVisible As Boolean)
-	pContent.RemoveAllViews
-	pContent.LoadLayout("layclv")
-	Dim cText As CSBuilder
-	ProgressDialogShow(gL.GetString("Loading ticket") & " ...")
-	Wait For (j) JobDone(j As HttpJob)
-	ProgressDialogHide
-	If j.Success=True Then
-		Dim ListTicket As List
-		ListTicket=mReadJSON.JSONListTicket(j.GetString)
-		Dim n As Int
-		For n=0 To ListTicket.Size-1
-			Dim gTicket As cTicket
-			gTicket=ListTicket.Get(n)
-			cText.Initialize
-			cText.Size(12).Append(gL.GetString("Number") & ": " & gTicket.number).PopAll.Append(CRLF)
-			If OrgVisible Then
-				cText.Size(14).Bold.Append(gTicket.organization).PopAll.Append(CRLF)
-			End If
-			cText.Size(20).Color(Colors.Black).Bold.Append(gTicket.title).PopAll.Append(CRLF).Append(CRLF)
-			cText.Size(12).Append(gL.GetString("Status") & ": " & gL.GetString(gTicket.state))
-			cText.PopAll
-			clv.AddTextItem(cText,gTicket)
-		Next
-		
-	End If
-	j.Release
-End Sub
-'Sub ListOrgs
-'	pContent.RemoveAllViews
-'	pContent.LoadLayout("layclv")
-'	Dim cText As CSBuilder
-'	Dim Org As cOrg
-'	Dim n As Int
-'	gOrgs.lOrgs.Sorttype("name",True)
-'	For n=0 To gOrgs.lOrgs.Size-1
-'		Org=gOrgs.lOrgs.Get(n)
-'		cText.Initialize		
-'		cText.Append(Org.name)
-'		cText.PopAll
-'		clv.AddTextItem(cText,Org.id)
-'	Next
-'End Sub
-'Sub ListUsers
-'	pContent.RemoveAllViews
-'	pContent.LoadLayout("layclv")
-'	Dim cText As CSBuilder
-'	Dim User As cUser
-'	Dim n As Int
-'	gUsers.lGlobal.Sorttype("firstname",True)
-'	For n=0 To gUsers.lGlobal.Size-1
-'		User=gUsers.lGlobal.Get(n)
-'		cText.Initialize		
-'		cText.Append(User.firstname & " " & User.lastname).Append(CRLF)
-'		If User.organization_id<>Null Then
-'			cText.Size(8).Append(gOrgs.org(User.organization_id).name)
-'		End If
-'		cText.PopAll
-'		clv.AddTextItem(cText,User.id)
-'	Next
-'End Sub
-'Sub ListNotifications
-'	pContent.RemoveAllViews
-'	pContent.LoadLayout("layclv")
-'	Dim cText As CSBuilder
+'Sub GetListTicket(Customer As Boolean,Status As String,OrgVisible As Boolean)
 '
-'	
+'	Return
 '	Dim j As HttpJob
 '	j.Initialize("",Me)
-'	j=gLink.GetNotifications(j)
-'	ProgressDialogShow(gL.LoadingNotifications)
-'	Wait For (j) JobDone(j As HttpJob)
-'	ProgressDialogHide
-'	If j.Success=True Then
-'		Dim sJson As String
-'		sJson=j.GetString
-'		Dim jP As JSONParser
-'		jP.Initialize(sJson)
-'		Dim ListN As List
-'		ListN=jP.NextArray
-'		Dim n As Int
-'		For n=0 To ListN.Size-1
-'			cText.Initialize
-'			cText.Append(ListN.Get(n))
-'			cText.PopAll
-'			clv.AddTextItem(cText,Null)
-'		Next
-'		
+'	If Customer Then
+'		Dim sO As ACMenuItem
+'		Dim sC As ACMenuItem
+'		sO=ActionBar.Menu.FindItem(2)
+'		sC=ActionBar.Menu.FindItem(3)
+'		j=gLink.GetTicketCustomer(j,sO.Checked,sC.Checked)
+'		Else
+'		j=gLink.GetTicketAgentStatus(j,Status)
 '	End If
-'	j.Release
 '	
-'	
+'	'LoadTicketOLD(j,OrgVisible)
 'End Sub
+
+Sub LoadTickets(ListTicket As List,OrgVisible As Boolean)
+	pContent.RemoveAllViews
+	pContent.LoadLayout("layclv")
+	Dim n As Int
+	Dim cText As CSBuilder
+	For n=0 To ListTicket.Size-1
+		Dim gTicket As cTicket
+		gTicket=ListTicket.Get(n)
+		cText.Initialize
+		cText.Size(12).Append(gL.Translate("Number") & ": " & gTicket.number).PopAll.Append(CRLF)
+		If OrgVisible Then
+			cText.Size(14).Bold.Append(gTicket.organization).PopAll.Append(CRLF)
+		End If
+		cText.Size(20).Color(Colors.Black).Bold.Append(gTicket.title).PopAll.Append(CRLF).Append(CRLF)
+		cText.Size(12).Append(gL.Translate("Status") & ": " & gL.Translate(gTicket.state))
+		cText.PopAll
+		Log(pContent.Width)
+		Log(pContent.Height)
+		Log(clv.AsView.Width)
+		Log(clv.AsView.Height)
+		clv.AddTextItem(cText,gTicket)
+	Next
+End Sub
 Sub clv_ItemClick (Index As Int, Value As Object)
 	Sleep(400)
 	If Value Is cTicket Then
